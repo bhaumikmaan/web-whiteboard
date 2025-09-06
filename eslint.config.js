@@ -1,8 +1,5 @@
 import js from '@eslint/js';
 import react from 'eslint-plugin-react';
-import reactHooks from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import importPlugin from 'eslint-plugin-import';
 import globals from 'globals';
 
 export default [
@@ -17,11 +14,12 @@ export default [
       parserOptions: { ecmaFeatures: { jsx: true } },
       globals: { ...globals.browser }
     },
-    plugins: { react, 'react-hooks': reactHooks, 'jsx-a11y': jsxA11y, import: importPlugin },
+    plugins: { react },
     settings: { react: { version: 'detect' } },
     rules: {
-      'react/react-in-jsx-scope': 'off',
-      'react/jsx-uses-react': 'off'
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-uses-react': 'off',
+      'react/react-in-jsx-scope': 'off'
     }
   },
   {
