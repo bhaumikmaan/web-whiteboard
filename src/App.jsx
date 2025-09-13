@@ -2,22 +2,41 @@ import React from 'react'
 import './App.css'
 
 function App() {
+  const [theme, setTheme] = React.useState(() =>
+    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'
+  )
+  React.useEffect(() => {
+    if (!window.matchMedia) return
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = (e) => setTheme(e.matches ? 'dark' : 'light')
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+
   return (
-    <div className="App">
-      <CanvasWhiteboard />
+    <div className={`App ${theme}`}>
+      <CanvasWhiteboard theme={theme} />
       <div className="hud">
         <div className="panel">
           <strong>Controls</strong><br/>
           Draw: Left mouse drag • Pan: Hold Space or Middle mouse • Zoom: Wheel • Reset: Double‑click background
         </div>
       </div>
+      <button
+        className="theme-toggle"
+        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+        aria-label="Toggle color scheme"
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
     </div>
   )
 }
 
 export default App
 
-function CanvasWhiteboard() {
+function CanvasWhiteboard({ theme }) {
   const canvasRef = React.useRef(null)
   const ctxRef = React.useRef(null)
   const dprRef = React.useRef(1)
@@ -41,6 +60,13 @@ function CanvasWhiteboard() {
   })
 
   const strokesRef = React.useRef([])
+  const themeColors = React.useMemo(
+    () =>
+      theme === 'dark'
+        ? { bg: '#0f1115', grid: '#2a2f3a', stroke: '#e6e6e6' }
+        : { bg: '#ffffff', grid: '#e6e6e6', stroke: '#222222' },
+    [theme]
+  )
 
   const screenToWorld = React.useCallback((sx, sy) => {
     const { panX, panY, scale } = viewRef.current
@@ -69,19 +95,24 @@ function CanvasWhiteboard() {
     const { panX, panY, scale } = viewRef.current
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.save()
+    ctx.fillStyle = themeColors.bg
+    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
+    ctx.restore()
 
     ctx.save()
     ctx.translate(panX, panY)
     ctx.scale(scale, scale)
 
-    drawGrid(ctx, canvas, viewRef.current)
+    drawGrid(ctx, canvas, viewRef.current, themeColors)
 
     for (const s of strokesRef.current) {
       if (!s.points.length) continue
       ctx.beginPath()
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
-      ctx.strokeStyle = s.color || '#222'
+      // Use theme-bound color unless a custom color is explicitly set
+      ctx.strokeStyle = (s.mode === 'custom' && s.color) ? s.color : themeColors.stroke
       ctx.lineWidth = (s.size || 2) / Math.max(0.0001, scale)
       const first = s.points
       ctx.moveTo(first.x, first.y)
@@ -94,7 +125,7 @@ function CanvasWhiteboard() {
 
     ctx.restore()
     rafRef.current = requestAnimationFrame(draw)
-  }, [])
+  }, [themeColors])
 
   React.useEffect(() => {
     const canvas = canvasRef.current
@@ -162,6 +193,12 @@ function CanvasWhiteboard() {
     }
   }, [resizeCanvas, draw])
 
+  React.useEffect(() => {
+    for (const s of strokesRef.current) {
+      if (!s.mode) s.mode = 'theme'
+    }
+  }, [theme])
+
   const onPointerDown = (e) => {
     const canvas = canvasRef.current
 
@@ -207,7 +244,8 @@ function CanvasWhiteboard() {
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
       const stroke = {
-        color: '#222',
+        // theme-bound by default so strokes follow light/dark toggles
+        mode: 'theme',
         size: 2,
         points: [{ x, y, p: e.pressure ?? 0.5 }],
       }
@@ -316,7 +354,7 @@ function CanvasWhiteboard() {
 
 const touchCache = new Map()
 
-function drawGrid(ctx, canvas, view) {
+function drawGrid(ctx, canvas, view, themeColors) {
   const grid = 100
   const w = canvas.clientWidth
   const h = canvas.clientHeight
@@ -327,7 +365,7 @@ function drawGrid(ctx, canvas, view) {
 
   ctx.save()
   ctx.lineWidth = 1 / Math.max(0.0001, view.scale)
-  ctx.strokeStyle = '#e6e6e6'
+  ctx.strokeStyle = themeColors.grid
   ctx.beginPath()
   const startX = Math.floor(left / grid) * grid
   const endX = Math.ceil(right / grid) * grid
