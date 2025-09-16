@@ -1,4 +1,6 @@
 name: Build (CRA with GA ID)
+permissions:
+  contents: read
 
 on:
   push:
