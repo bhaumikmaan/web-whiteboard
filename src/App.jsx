@@ -122,7 +122,7 @@ function CanvasWhiteboard({ theme }) {
       // Use theme-bound color unless a custom color is explicitly set
       ctx.strokeStyle = (s.mode === 'custom' && s.color) ? s.color : themeColors.stroke
       ctx.lineWidth = (s.size || 2) / Math.max(0.0001, scale)
-      const first = s.points
+      const first = s.points[0]
       ctx.moveTo(first.x, first.y)
       for (let i = 1; i < s.points.length; i++) {
         const p = s.points[i]
@@ -173,10 +173,13 @@ function CanvasWhiteboard({ theme }) {
       const wx = (sx - panX) / scale
       const wy = (sy - panY) / scale
 
-      const forceZoom = e.altKey // manual override if detection ever misclassifies
-      const isMouseWheel = isLikelyMouseWheel(e)
-
-      if (e.ctrlKey || forceZoom || isMouseWheel) {
+      // Heuristic: zoom only on ctrl+wheel (trackpad pinch), alt+wheel (manual),
+      // or discrete mouse-like steps; otherwise treat as two-finger pan.
+      const absX = Math.abs(e.deltaX)
+      const absY = Math.abs(e.deltaY)
+      const likelyMouseWheel = (e.deltaMode === 1) || (absY >= 120 && absX < 1)
+      const forceZoom = e.altKey
+      if (e.ctrlKey || forceZoom || likelyMouseWheel) {
         // Zoom toward cursor
         const factor = e.ctrlKey ? 1.02 : 1.0015
         const zoom = Math.pow(factor, -e.deltaY)
@@ -420,14 +423,10 @@ function clamp(v, a, b) {
 }
 
 function isLikelyMouseWheel(e) {
-  // Line-delimited deltas are typical for mouse wheels (e.g. Firefox)
-  if (e.deltaMode === 1 /* WheelEvent.DOM_DELTA_LINE */) return true
-  // Significant vertical step with minimal horizontal movement suggests mouse
-  const ax = Math.abs(e.deltaX)
-  const ay = Math.abs(e.deltaY)
-  if (ax < 0.5 && ay >= 50) return true
-  // Default: assume trackpad
-  return false
+  // Retained for compatibility if referenced elsewhere; use stricter threshold.
+  if (e.deltaMode === 1) return true
+  const ax = Math.abs(e.deltaX), ay = Math.abs(e.deltaY)
+  return ax < 1 && ay >= 120
 }
 function Toaster({ theme, onToggleTheme }) {
   const [open, setOpen] = React.useState(false)

@@ -71,6 +71,10 @@ body {
   font: 600 18px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   cursor: pointer;
   backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 .toaster-toggle:hover {
   opacity: 0.95;
