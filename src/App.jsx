@@ -236,21 +236,15 @@ function CanvasWhiteboard({ theme }) {
 
       touchCache.set(e.pointerId, { x: e.clientX, y: e.clientY })
       if (touchCache.size === 2 && !stateRef.current.pinch) {
-        const [a, b] = [...touchCache.values()]
-        const startDist = Math.hypot(a.x - b.x, a.y - b.y)
-        const rect = canvas.getBoundingClientRect()
-        const originX = (a.x + b.x) / 2 - rect.left
-        const originY = (a.y + b.y) / 2 - rect.top
         const [id1, id2] = [...touchCache.keys()]
-        stateRef.current.pinch = {
-          id1,
-          id2,
-          startDist,
-          startScale: viewRef.current.scale,
-          startPanX: viewRef.current.panX,
-          startPanY: viewRef.current.panY,
-          originX,
-          originY,
+        const a = touchCache.get(id1)
+        const b = touchCache.get(id2)
+        if (a && b) {
+          const rect = canvas.getBoundingClientRect()
+          const cx = (a.x + b.x) / 2 - rect.left
+          const cy = (a.y + b.y) / 2 - rect.top
+          const dist = Math.hypot(a.x - b.x, a.y - b.y)
+          stateRef.current.pinch = { id1, id2, lastDist: Math.max(1e-3, dist), lastCX: cx, lastCY: cy }
         }
       }
     }
