@@ -16,12 +16,19 @@ function App() {
   return (
     <div className={`App ${theme}`}>
       <CanvasWhiteboard theme={theme} />
+      {/* Desktop HUD (hidden on small screens via CSS) */}
       <div className="hud">
         <div className="panel">
-          <strong>Controls</strong><br/>
-          Draw: Left mouse drag • Pan: Hold Space or Middle mouse • Zoom: Wheel • Reset: Double‑click background
+          <strong>Controls</strong><br />
+          Draw: 1‑finger drag • Pan: 2‑finger drag or Space+Left mouse • Zoom: Pinch or Wheel • Reset: Double‑tap / Double‑click
         </div>
       </div>
+      {/* Mobile toaster (hidden on desktop via CSS) */}
+      <Toaster
+        theme={theme}
+        onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+      />
+      {/* Desktop theme toggle (hidden on mobile via CSS) */}
       <button
         className="theme-toggle"
         onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
@@ -42,6 +49,7 @@ function CanvasWhiteboard({ theme }) {
   const dprRef = React.useRef(1)
   const rafRef = React.useRef(0)
   const roRef = React.useRef(null)
+  const lastTapRef = React.useRef({ t: 0, x: 0, y: 0 })
 
   const viewRef = React.useRef({
     panX: 0,
@@ -114,7 +122,7 @@ function CanvasWhiteboard({ theme }) {
       // Use theme-bound color unless a custom color is explicitly set
       ctx.strokeStyle = (s.mode === 'custom' && s.color) ? s.color : themeColors.stroke
       ctx.lineWidth = (s.size || 2) / Math.max(0.0001, scale)
-      const first = s.points
+      const first = s.points[0]
       ctx.moveTo(first.x, first.y)
       for (let i = 1; i < s.points.length; i++) {
         const p = s.points[i]
@@ -165,10 +173,13 @@ function CanvasWhiteboard({ theme }) {
       const wx = (sx - panX) / scale
       const wy = (sy - panY) / scale
 
-      const forceZoom = e.altKey // manual override if detection ever misclassifies
-      const isMouseWheel = isLikelyMouseWheel(e)
-
-      if (e.ctrlKey || forceZoom || isMouseWheel) {
+      // Heuristic: zoom only on ctrl+wheel (trackpad pinch), alt+wheel (manual),
+      // or discrete mouse-like steps; otherwise treat as two-finger pan.
+      const absX = Math.abs(e.deltaX)
+      const absY = Math.abs(e.deltaY)
+      const likelyMouseWheel = (e.deltaMode === 1) || (absY >= 120 && absX < 1)
+      const forceZoom = e.altKey
+      if (e.ctrlKey || forceZoom || likelyMouseWheel) {
         // Zoom toward cursor
         const factor = e.ctrlKey ? 1.02 : 1.0015
         const zoom = Math.pow(factor, -e.deltaY)
@@ -183,11 +194,19 @@ function CanvasWhiteboard({ theme }) {
       }
     }
     canvas.addEventListener('wheel', onWheelNative, { passive: false })
+    const onPointerCancelDoc = () => {
+      stateRef.current.pointerId = null
+      stateRef.current.drawing = false
+      stateRef.current.panning = false
+      stateRef.current.pinch = null
+    }
+    document.addEventListener('pointercancel', onPointerCancelDoc)
 
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
       canvas.removeEventListener('wheel', onWheelNative)
+      document.removeEventListener('pointercancel', onPointerCancelDoc)
       if (roRef.current) roRef.current.disconnect()
       cancelAnimationFrame(rafRef.current)
     }
@@ -202,8 +221,19 @@ function CanvasWhiteboard({ theme }) {
   const onPointerDown = (e) => {
     const canvas = canvasRef.current
 
-    // Handle touch pinch
+    // Double‑tap detection
     if (e.pointerType === 'touch') {
+      const now = performance.now()
+      const dt = now - lastTapRef.current.t
+      const dx = e.clientX - lastTapRef.current.x
+      const dy = e.clientY - lastTapRef.current.y
+      if (dt < 300 && (dx * dx + dy * dy) < 30 * 30) {
+        viewRef.current.panX = 0
+        viewRef.current.panY = 0
+        viewRef.current.scale = 1
+      }
+      lastTapRef.current = { t: now, x: e.clientX, y: e.clientY }
+
       touchCache.set(e.pointerId, { x: e.clientX, y: e.clientY })
       if (touchCache.size === 2 && !stateRef.current.pinch) {
         const [a, b] = [...touchCache.values()]
@@ -244,7 +274,6 @@ function CanvasWhiteboard({ theme }) {
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
       const stroke = {
-        // theme-bound by default so strokes follow light/dark toggles
         mode: 'theme',
         size: 2,
         points: [{ x, y, p: e.pressure ?? 0.5 }],
@@ -348,6 +377,12 @@ function CanvasWhiteboard({ theme }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onDoubleClick={onDoubleClick}
+      onPointerCancel={() => {
+        stateRef.current.pointerId = null
+        stateRef.current.drawing = false
+        stateRef.current.panning = false
+        stateRef.current.pinch = null
+      }}
     />
   )
 }
@@ -388,12 +423,37 @@ function clamp(v, a, b) {
 }
 
 function isLikelyMouseWheel(e) {
-  // Line-delimited deltas are typical for mouse wheels (e.g. Firefox)
-  if (e.deltaMode === 1 /* WheelEvent.DOM_DELTA_LINE */) return true
-  // Significant vertical step with minimal horizontal movement suggests mouse
-  const ax = Math.abs(e.deltaX)
-  const ay = Math.abs(e.deltaY)
-  if (ax < 0.5 && ay >= 50) return true
-  // Default: assume trackpad
-  return false
+  // Retained for compatibility if referenced elsewhere; use stricter threshold.
+  if (e.deltaMode === 1) return true
+  const ax = Math.abs(e.deltaX), ay = Math.abs(e.deltaY)
+  return ax < 1 && ay >= 120
+}
+function Toaster({ theme, onToggleTheme }) {
+  const [open, setOpen] = React.useState(false)
+  return (
+    <>
+      <button
+        className="toaster-toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="wb-toaster"
+        title={open ? 'Close menu' : 'Open menu'}
+      >
+        ⋯
+      </button>
+      <div id="wb-toaster" className={`toaster ${open ? 'open' : ''}`}>
+        <div className="toaster-content">
+          <div className="toaster-row">
+            <span className="toaster-title">Whiteboard</span>
+            <button className="chip" onClick={onToggleTheme} aria-label="Toggle color scheme">
+              {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
+            </button>
+          </div>
+          <div className="toaster-help">
+            Draw: 1‑finger drag • Pan: 2‑finger drag • Zoom: Pinch • Reset: Double‑tap
+          </div>
+        </div>
+      </div>
+    </>
+  )
 }
