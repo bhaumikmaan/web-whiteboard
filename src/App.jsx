@@ -5,6 +5,8 @@ function App() {
   const [theme, setTheme] = React.useState(() =>
     (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'
   )
+  // Brush tool state
+  const [tool, setTool] = React.useState({ kind: 'pen', size: 2 })
   React.useEffect(() => {
     if (!window.matchMedia) return
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
@@ -15,7 +17,9 @@ function App() {
 
   return (
     <div className={`App ${theme}`}>
-      <CanvasWhiteboard theme={theme} />
+      <CanvasWhiteboard theme={theme} tool={tool} />
+      {/* Mid‑left brush palette */}
+      <BrushPalette theme={theme} tool={tool} onChange={setTool} />
       {/* Desktop HUD (hidden on small screens via CSS) */}
       <div className="hud">
         <div className="panel">
@@ -43,7 +47,7 @@ function App() {
 
 export default App
 
-function CanvasWhiteboard({ theme }) {
+function CanvasWhiteboard({ theme, tool }) {
   const canvasRef = React.useRef(null)
   const ctxRef = React.useRef(null)
   const dprRef = React.useRef(1)
@@ -101,27 +105,22 @@ function CanvasWhiteboard({ theme }) {
     const ctx = ctxRef.current
     if (!canvas || !ctx) return
     const { panX, panY, scale } = viewRef.current
-
+    // 1) Clear frame
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.save()
-    ctx.fillStyle = themeColors.bg
-    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
-    ctx.restore()
-
+    // 2) Draw strokes (eraser works here and won’t touch the grid we’ll add later)
     ctx.save()
     ctx.translate(panX, panY)
     ctx.scale(scale, scale)
-
-    drawGrid(ctx, canvas, viewRef.current, themeColors)
-
     for (const s of strokesRef.current) {
       if (!s.points.length) continue
       ctx.beginPath()
-      ctx.lineJoin = 'round'
-      ctx.lineCap = 'round'
-      // Use theme-bound color unless a custom color is explicitly set
+      // Apply per-stroke style
+      ctx.lineJoin = s.join || 'round'
+      ctx.lineCap = s.cap || 'round'
       ctx.strokeStyle = (s.mode === 'custom' && s.color) ? s.color : themeColors.stroke
       ctx.lineWidth = (s.size || 2) / Math.max(0.0001, scale)
+      ctx.globalAlpha = s.alpha ?? 1
+      ctx.globalCompositeOperation = s.erase ? 'destination-out' : 'source-over'
       const first = s.points[0]
       ctx.moveTo(first.x, first.y)
       for (let i = 1; i < s.points.length; i++) {
@@ -129,8 +128,24 @@ function CanvasWhiteboard({ theme }) {
         ctx.lineTo(p.x, p.y)
       }
       ctx.stroke()
+      // Reset per-stroke
+      ctx.globalAlpha = 1
+      ctx.globalCompositeOperation = 'source-over'
     }
-
+    ctx.restore()
+    // 3) Paint grid and background behind existing content
+    ctx.save()
+    ctx.globalCompositeOperation = 'destination-over'
+    // Grid under strokes (draw in world space) — draw this FIRST
+    ctx.save()
+    ctx.translate(panX, panY)
+    ctx.scale(scale, scale)
+    drawGrid(ctx, canvas, viewRef.current, themeColors)
+    ctx.restore()
+    // Background under strokes + grid — draw this SECOND
+    ctx.fillStyle = themeColors.bg
+    ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight)
+    ctx.globalCompositeOperation = 'source-over'
     ctx.restore()
     rafRef.current = requestAnimationFrame(draw)
   }, [themeColors])
@@ -273,9 +288,17 @@ function CanvasWhiteboard({ theme }) {
 
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
+      // Map current tool to stroke attributes
+      const t = tool || { kind: 'pen', size: 2 }
       const stroke = {
         mode: 'theme',
-        size: 2,
+        size: t.kind === 'marker' ? Math.max(4, t.size * 2) :
+              t.kind === 'highlighter' ? Math.max(10, t.size * 6) :
+              t.kind === 'eraser' ? Math.max(8, t.size * 6) : (t.size || 2),
+        alpha: t.kind === 'highlighter' ? 0.28 : 1,
+        erase: t.kind === 'eraser',
+        cap: 'round',
+        join: 'round',
         points: [{ x, y, p: e.pressure ?? 0.5 }],
       }
       strokesRef.current.push(stroke)
@@ -455,5 +478,38 @@ function Toaster({ theme, onToggleTheme }) {
         </div>
       </div>
     </>
+  )
+}
+
+
+// Mid-left brush palette
+function BrushPalette({ theme, tool, onChange }) {
+  return (
+    <div className="palette" role="toolbar" aria-label="Brush styles">
+      <button
+        className={`palette-btn ${tool.kind === 'pen' ? 'active' : ''}`}
+        onClick={() => onChange({ kind: 'pen', size: 2 })}
+        title="Pen"
+        aria-pressed={tool.kind === 'pen'}
+      >🖊</button>
+      <button
+        className={`palette-btn ${tool.kind === 'marker' ? 'active' : ''}`}
+        onClick={() => onChange({ kind: 'marker', size: 3 })}
+        title="Marker"
+        aria-pressed={tool.kind === 'marker'}
+      >🖍</button>
+      <button
+        className={`palette-btn ${tool.kind === 'highlighter' ? 'active' : ''}`}
+        onClick={() => onChange({ kind: 'highlighter', size: 2 })}
+        title="Highlighter"
+        aria-pressed={tool.kind === 'highlighter'}
+      >🖌</button>
+      <button
+        className={`palette-btn ${tool.kind === 'eraser' ? 'active' : ''}`}
+        onClick={() => onChange({ kind: 'eraser', size: 2 })}
+        title="Eraser"
+        aria-pressed={tool.kind === 'eraser'}
+      >⌫</button>
+    </div>
   )
 }
