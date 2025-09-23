@@ -79,6 +79,37 @@ body {
   opacity: 0.9;
 }
 
+/* Vertical pop-out panel anchored next to toolbar (top/left set inline) */
+.palette-pop {
+  position: fixed;
+  z-index: 100;                 /* above canvas and HUD */
+  display: flex;
+  flex-direction: column;       /* vertical list */
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+}
+.palette-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.palette-item .swatch { display: inline-block; background: currentColor; border-radius: 999px; }
+.palette-item.active { background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%); }
+
+
 /* Theme variables */
 .App.light {
   --bg: #ffffff;
@@ -183,6 +214,7 @@ body {
     padding: 6px;
     gap: 6px;
   }
+  .palette-pop { gap: 4px; padding: 6px; }
   .theme-toggle {
     display: none;
   }

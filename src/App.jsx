@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import './App.css'
 
 function App() {
@@ -484,32 +485,129 @@ function Toaster({ theme, onToggleTheme }) {
 
 // Mid-left brush palette
 function BrushPalette({ theme, tool, onChange }) {
+  const [showSize, setShowSize] = React.useState(false)
+  const [showStyle, setShowStyle] = React.useState(false)
+  const [stylePos, setStylePos] = React.useState({ top: 0, left: 0 })
+  const [sizePos, setSizePos] = React.useState({ top: 0, left: 0 })
+  const styleBtnRef = React.useRef(null)
+  const sizeBtnRef = React.useRef(null)
+  const sizeId = 'menu-sizes'
+  const styleId = 'menu-styles'
+
+
+  const setSize = (px) => {
+    onChange({ kind: tool.kind || 'pen', size: px })
+    setShowSize(false)
+  }
+  const setKind = (k) => {
+    onChange({ kind: k, size: tool.size || 2 })
+    setShowStyle(false)
+  }
+  const toggleStyle = () => {
+    const el = styleBtnRef.current
+    if (el) {
+      const r = el.getBoundingClientRect()           // viewport coords [web:350]
+      setStylePos({
+        top: r.top + window.scrollY,                  // add scroll offset [web:358]
+        left: r.right + window.scrollX + 8            // add scroll offset [web:355]
+      })
+    }
+    setShowStyle(v => !v)
+    setShowSize(false)
+  }
+  const toggleSize = () => {
+    const el = sizeBtnRef.current
+    if (el) {
+      const r = el.getBoundingClientRect()           // viewport coords [web:350]
+      setSizePos({
+        top: r.top + window.scrollY,                  // add scroll offset [web:358]
+        left: r.right + window.scrollX + 8            // add scroll offset [web:355]
+      })
+    }
+    setShowSize(v => !v)
+    setShowStyle(false)
+  }
+
+
   return (
-    <div className="palette" role="toolbar" aria-label="Brush styles">
+    <div className="palette" role="toolbar" aria-label="Brush tools">
       <button
-        className={`palette-btn ${tool.kind === 'pen' ? 'active' : ''}`}
-        onClick={() => onChange({ kind: 'pen', size: 2 })}
-        title="Pen"
-        aria-pressed={tool.kind === 'pen'}
-      >🖊</button>
+        ref={styleBtnRef}
+        className="palette-btn"
+        onClick={toggleStyle}
+        aria-haspopup="menu"
+        aria-expanded={showStyle}
+        aria-controls={styleId}
+        title="Brush style"
+      >🎨</button>
+
+
       <button
-        className={`palette-btn ${tool.kind === 'marker' ? 'active' : ''}`}
-        onClick={() => onChange({ kind: 'marker', size: 3 })}
-        title="Marker"
-        aria-pressed={tool.kind === 'marker'}
-      >🖍</button>
-      <button
-        className={`palette-btn ${tool.kind === 'highlighter' ? 'active' : ''}`}
-        onClick={() => onChange({ kind: 'highlighter', size: 2 })}
-        title="Highlighter"
-        aria-pressed={tool.kind === 'highlighter'}
-      >🖌</button>
-      <button
-        className={`palette-btn ${tool.kind === 'eraser' ? 'active' : ''}`}
-        onClick={() => onChange({ kind: 'eraser', size: 2 })}
-        title="Eraser"
-        aria-pressed={tool.kind === 'eraser'}
-      >⌫</button>
+        ref={sizeBtnRef}
+        className="palette-btn"
+        onClick={toggleSize}
+        aria-haspopup="menu"
+        aria-expanded={showSize}
+        aria-controls={sizeId}
+        title="Pen width"
+      >↕️</button>
+
+
+      {showStyle && createPortal(
+        <div
+          id={styleId}
+          role="menu"
+          className="palette-pop"
+          style={{ top: stylePos.top, left: stylePos.left }}  // exact anchor point [web:350]
+          aria-label="Brush style menu"
+        >
+          {[
+            { key: 'pen', label: 'Pen', icon: '🖊' },
+            { key: 'marker', label: 'Marker', icon: '🖍' },
+            { key: 'highlighter', label: 'Highlighter', icon: '🖌' },
+            { key: 'eraser', label: 'Eraser', icon: '⌫' },
+          ].map(o => (
+            <button
+              key={o.key}
+              role="menuitemradio"
+              aria-checked={tool.kind === o.key}
+              className={`palette-item ${tool.kind === o.key ? 'active' : ''}`}
+              onClick={() => setKind(o.key)}
+              title={o.label}
+            >
+              <span aria-hidden="true" style={{ marginRight: 6 }}>{o.icon}</span>
+              {o.label}
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+
+
+      {showSize && createPortal(
+        <div
+          id={sizeId}
+          role="menu"
+          className="palette-pop"
+          style={{ top: sizePos.top, left: sizePos.left }}     // no extra transform [web:350]
+          aria-label="Pen width menu"
+        >
+          {[1, 2, 4, 6, 8, 12, 16].map(n => (
+            <button
+              key={n}
+              role="menuitemradio"
+              aria-checked={tool.size === n}
+              className={`palette-item ${tool.size === n ? 'active' : ''}`}
+              onClick={() => setSize(n)}
+              title={`${n}px`}
+            >
+              <span className="swatch" style={{ height: Math.max(2, n), width: 28 }} />
+              {n}px
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
