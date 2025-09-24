@@ -6,8 +6,11 @@ function App() {
   const [theme, setTheme] = React.useState(() =>
     (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'
   )
-  // Brush tool state
-  const [tool, setTool] = React.useState({ kind: 'pen', size: 2 })
+  const [tool, setTool] = React.useState({ kind: 'pen', size: 2, color: undefined })
+  // Ensure theme variables apply to portals (popouts/toaster): set on :root
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
   React.useEffect(() => {
     if (!window.matchMedia) return
     const mql = window.matchMedia('(prefers-color-scheme: dark)')
@@ -289,15 +292,15 @@ function CanvasWhiteboard({ theme, tool }) {
 
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
-      // Map current tool to stroke attributes
-      const t = tool || { kind: 'pen', size: 2 }
+      const t = tool || { kind: 'pen', size: 2, color: undefined }
       const stroke = {
-        mode: 'theme',
+        mode: (t.kind !== 'eraser' && t.color) ? 'custom' : 'theme',
         size: t.kind === 'marker' ? Math.max(4, t.size * 2) :
               t.kind === 'highlighter' ? Math.max(10, t.size * 6) :
               t.kind === 'eraser' ? Math.max(8, t.size * 6) : (t.size || 2),
         alpha: t.kind === 'highlighter' ? 0.28 : 1,
         erase: t.kind === 'eraser',
+        color: (t.kind !== 'eraser') ? t.color : undefined,
         cap: 'round',
         join: 'round',
         points: [{ x, y, p: e.pressure ?? 0.5 }],
@@ -483,54 +486,79 @@ function Toaster({ theme, onToggleTheme }) {
 }
 
 
-// Mid-left brush palette
+
 function BrushPalette({ theme, tool, onChange }) {
   const [showSize, setShowSize] = React.useState(false)
   const [showStyle, setShowStyle] = React.useState(false)
+  const [showColor, setShowColor] = React.useState(false)
   const [stylePos, setStylePos] = React.useState({ top: 0, left: 0 })
   const [sizePos, setSizePos] = React.useState({ top: 0, left: 0 })
+  const [colorPos, setColorPos] = React.useState({ top: 0, left: 0 })
   const styleBtnRef = React.useRef(null)
   const sizeBtnRef = React.useRef(null)
+  const colorBtnRef = React.useRef(null)
   const sizeId = 'menu-sizes'
   const styleId = 'menu-styles'
-
+  const colorId = 'menu-colors'
 
   const setSize = (px) => {
-    onChange({ kind: tool.kind || 'pen', size: px })
+    onChange(prev => ({ ...prev, size: px }))
     setShowSize(false)
   }
   const setKind = (k) => {
-    onChange({ kind: k, size: tool.size || 2 })
+    onChange(prev => ({ ...prev, kind: k }))
     setShowStyle(false)
   }
   const toggleStyle = () => {
     const el = styleBtnRef.current
     if (el) {
-      const r = el.getBoundingClientRect()           // viewport coords [web:350]
+      const r = el.getBoundingClientRect()
       setStylePos({
-        top: r.top + window.scrollY,                  // add scroll offset [web:358]
-        left: r.right + window.scrollX + 8            // add scroll offset [web:355]
+        top: r.top + window.scrollY,
+        left: r.right + window.scrollX + 8
       })
     }
     setShowStyle(v => !v)
-    setShowSize(false)
+    setShowSize(false); setShowColor(false)
   }
   const toggleSize = () => {
     const el = sizeBtnRef.current
     if (el) {
-      const r = el.getBoundingClientRect()           // viewport coords [web:350]
+      const r = el.getBoundingClientRect()
       setSizePos({
-        top: r.top + window.scrollY,                  // add scroll offset [web:358]
-        left: r.right + window.scrollX + 8            // add scroll offset [web:355]
+        top: r.top + window.scrollY,
+        left: r.right + window.scrollX + 8
       })
     }
     setShowSize(v => !v)
-    setShowStyle(false)
+    setShowStyle(false); setShowColor(false)
   }
-
+  const toggleColor = () => {
+    const el = colorBtnRef.current
+    if (el) {
+      const r = el.getBoundingClientRect()
+      setColorPos({ top: r.top + window.scrollY, left: r.right + window.scrollX + 8 })
+    }
+    setShowColor(v => !v)
+    setShowStyle(false); setShowSize(false)
+  }
+  const setColor = (css) => {
+    onChange(prev => ({ ...prev, color: css }))
+    setShowColor(false)
+  }
 
   return (
     <div className="palette" role="toolbar" aria-label="Brush tools">
+      <button
+        ref={colorBtnRef}
+        className="palette-btn"
+        onClick={toggleColor}
+        aria-haspopup="menu"
+        aria-expanded={showColor}
+        aria-controls={colorId}
+        title="Colors"
+      >🌈</button>
+
       <button
         ref={styleBtnRef}
         className="palette-btn"
@@ -540,7 +568,6 @@ function BrushPalette({ theme, tool, onChange }) {
         aria-controls={styleId}
         title="Brush style"
       >🎨</button>
-
 
       <button
         ref={sizeBtnRef}
@@ -552,13 +579,12 @@ function BrushPalette({ theme, tool, onChange }) {
         title="Pen width"
       >↕️</button>
 
-
       {showStyle && createPortal(
         <div
           id={styleId}
           role="menu"
           className="palette-pop"
-          style={{ top: stylePos.top, left: stylePos.left }}  // exact anchor point [web:350]
+          style={{ top: stylePos.top, left: stylePos.left }}
           aria-label="Brush style menu"
         >
           {[
@@ -583,13 +609,12 @@ function BrushPalette({ theme, tool, onChange }) {
         document.body
       )}
 
-
       {showSize && createPortal(
         <div
           id={sizeId}
           role="menu"
           className="palette-pop"
-          style={{ top: sizePos.top, left: sizePos.left }}     // no extra transform [web:350]
+          style={{ top: sizePos.top, left: sizePos.left }}
           aria-label="Pen width menu"
         >
           {[1, 2, 4, 6, 8, 12, 16].map(n => (
@@ -603,6 +628,37 @@ function BrushPalette({ theme, tool, onChange }) {
             >
               <span className="swatch" style={{ height: Math.max(2, n), width: 28 }} />
               {n}px
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
+
+      {showColor && createPortal(
+        <div
+          id={colorId}
+          role="menu"
+          className="palette-pop"
+          style={{ top: colorPos.top, left: colorPos.left }}
+          aria-label="Pen colors"
+        >
+          {[
+            { name: 'Blue',   css: 'blue'   },
+            { name: 'Red',    css: 'red'    },
+            { name: 'Green',  css: 'green'  },
+            { name: 'Yellow', css: 'yellow' },
+            { name: 'Pink',   css: 'pink'   },
+          ].map(c => (
+            <button
+              key={c.name}
+              role="menuitemradio"
+              aria-checked={tool.color === c.css}
+              className={`palette-item color ${tool.color === c.css ? 'active' : ''}`}
+              onClick={() => setColor(c.css)}
+              title={c.name}
+            >
+              <span className="swatch-dot" style={{ background: c.css }} aria-hidden="true" />
+              {c.name}
             </button>
           ))}
         </div>,

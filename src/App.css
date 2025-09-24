@@ -81,10 +81,13 @@ body {
 
 /* Vertical pop-out panel anchored next to toolbar (top/left set inline) */
 .palette-pop {
-  position: fixed;
-  z-index: 100;                 /* above canvas and HUD */
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%); 
+  z-index: 101;
   display: flex;
-  flex-direction: column;       /* vertical list */
+  flex-direction: column;
   gap: 6px;
   padding: 8px;
   border-radius: 10px;
@@ -109,15 +112,24 @@ body {
 .palette-item .swatch { display: inline-block; background: currentColor; border-radius: 999px; }
 .palette-item.active { background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%); }
 
+/* Color swatch items */
+.palette-item.color { min-width: 140px; }
+.swatch-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06) inset;
+}
 
-/* Theme variables */
-.App.light {
+/* Theme variables on :root so portals inherit them */
+:root[data-theme="light"] {
   --bg: #ffffff;
   --text: #111111;
   --panel-bg: rgba(255,255,255,0.9);
   --panel-border: #dddddd;
 }
-.App.dark {
+:root[data-theme="dark"] {
   --bg: #0f1115;
   --text: #f1f3f5;
   --panel-bg: rgba(20,22,26,0.9);
