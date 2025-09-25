@@ -42,14 +42,94 @@ body {
   padding: 8px 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-/* Theme variables */
-.App.light {
+
+/* Mid-left brush palette */
+.palette {
+  position: fixed;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(6px);
+}
+.palette-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+}
+.palette-btn.active {
+  background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%);
+}
+.palette-btn:hover {
+  opacity: 0.9;
+}
+
+/* Vertical pop-out panel anchored next to toolbar (top/left set inline) */
+.palette-pop {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translateY(-50%); 
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+}
+.palette-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.palette-item .swatch { display: inline-block; background: currentColor; border-radius: 999px; }
+.palette-item.active { background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%); }
+
+/* Color swatch items */
+.palette-item.color { min-width: 140px; }
+.swatch-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06) inset;
+}
+
+/* Theme variables on :root so portals inherit them */
+:root[data-theme="light"] {
   --bg: #ffffff;
   --text: #111111;
   --panel-bg: rgba(255,255,255,0.9);
   --panel-border: #dddddd;
 }
-.App.dark {
+:root[data-theme="dark"] {
   --bg: #0f1115;
   --text: #f1f3f5;
   --panel-bg: rgba(20,22,26,0.9);
@@ -141,6 +221,12 @@ body {
   .hud {
     display: none;
   }
+  .palette {
+    left: 10px;
+    padding: 6px;
+    gap: 6px;
+  }
+  .palette-pop { gap: 4px; padding: 6px; }
   .theme-toggle {
     display: none;
   }
