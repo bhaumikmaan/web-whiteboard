@@ -45,6 +45,16 @@ function App() {
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
+      <a
+        className="made-with"
+        href="https://github.com/bhaumikmaan"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Made with love by bhaumikmaan – opens GitHub profile in a new tab"
+        title="Made with ♥ by bhaumikmaan"
+      >
+        Made with <span className="heart" aria-hidden="true">❤</span> by bhaumikmaan
+      </a>
     </div>
   )
 }

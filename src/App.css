@@ -160,6 +160,32 @@ body {
   opacity: 0.95;
 }
 
+/* Bottom‑center credit badge */
+.made-with {
+  position: fixed;                    /* fix to viewport bottom center */ 
+  left: 50%;                          /* center horizontally */
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* avoid notches/home bar */
+  transform: translateX(-50%);        /* exact centering */
+  z-index: 21;                        /* above canvas/HUD */
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text);
+  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.made-with .heart {
+  color: #e03131;                     /* subtle accent for the heart */
+}
+.made-with:hover {
+  opacity: 0.95;
+}
+
 /* Toaster panel */
 .toaster {
   position: fixed;
