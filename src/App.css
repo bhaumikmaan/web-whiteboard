@@ -172,15 +172,22 @@ body {
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   color: var(--text);
-  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font: 500 clamp(10px, 2.8vw, 12px) ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   text-decoration: none;
   backdrop-filter: blur(6px);
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;                /* keep on one line */
+  line-height: 1;                     /* reduce vertical spread */
+  box-sizing: border-box;
+  max-width: calc(100vw - 24px);      /* prevent overflow on very narrow screens */
+  overflow: hidden;
+  text-overflow: ellipsis;            /* clip gracefully if absolutely necessary */
 }
 .made-with .heart {
   color: #e03131;                     /* subtle accent for the heart */
+  flex-shrink: 0;                     /* avoid squashing the icon */
 }
 .made-with:hover {
   opacity: 0.95;
@@ -266,7 +273,15 @@ body {
     min-width: 0;
     max-width: min(94vw, 520px);
   }
+
+  /* Slightly tighter spacing on phones */
+  .made-with {
+    padding: 5px 8px;
+    gap: 4px;
+    font-size: clamp(10px, 3.6vw, 12px);
+  }
 }
+
 
 /* Desktop = hoverable, fine pointer (mouse/trackpad) */
 @media (hover: hover) and (pointer: fine) {
