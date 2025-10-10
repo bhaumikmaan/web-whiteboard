@@ -13,6 +13,7 @@
   background: var(--panel-bg);
   backdrop-filter: blur(6px);
 }
+
 .paletteBtn {
   width: 36px;
   height: 36px;
@@ -26,11 +27,18 @@
   cursor: pointer;
   font-size: 18px;
 }
-.paletteBtn:hover { opacity: 0.9; }
-.active { background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%); }
+
+.paletteBtn:hover {
+  opacity: 0.9;
+}
+
+.active {
+  background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%);
+}
 
 .palettePop {
-  position: fixed;            /* anchored via inline top/left from getBoundingClientRect */
+  position: fixed;
+  /* anchored via inline top/left from getBoundingClientRect */
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -41,8 +49,9 @@
   background: var(--panel-bg);
   color: var(--text);
   backdrop-filter: blur(6px);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
 }
+
 .paletteItem {
   display: inline-flex;
   align-items: center;
@@ -55,14 +64,34 @@
   cursor: pointer;
   font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
-.swatch { display: inline-block; background: currentColor; border-radius: 999px; }
-.color { min-width: 140px; }
-.swatchDot {
-  width: 16px; height: 16px; border-radius: 50%;
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.06) inset;
+
+.swatch {
+  display: inline-block;
+  background: currentColor;
+  border-radius: 999px;
 }
+
+.color {
+  min-width: 140px;
+}
+
+.swatchDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) inset;
+}
+
 @media (hover: none) and (pointer: coarse) {
-  .palette { left: 10px; padding: 6px; gap: 6px; }
-  .palettePop { gap: 4px; padding: 6px; }
+  .palette {
+    left: 10px;
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .palettePop {
+    gap: 4px;
+    padding: 6px;
+  }
 }
