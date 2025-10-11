@@ -1,19 +1,41 @@
 .madeWith {
-  position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 21;
   padding: 6px 10px;
-  border-radius: 999px; border: 1px solid var(--panel-border);
-  background: var(--panel-bg); color: var(--text);
+  border-radius: 999px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text);
   font: 500 clamp(10px, 2.8vw, 12px) ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  text-decoration: none; backdrop-filter: blur(6px);
-  display: inline-flex; align-items: center; gap: 6px;
-  white-space: nowrap; line-height: 1; box-sizing: border-box;
-  max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  line-height: 1;
+  box-sizing: border-box;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.heart { color: #e03131; flex-shrink: 0; }
-.madeWith:hover { opacity: 0.95; }
+
+.heart {
+  color: #e03131;
+  flex-shrink: 0;
+}
+
+.madeWith:hover {
+  opacity: 0.95;
+}
 
 @media (hover: none) and (pointer: coarse) {
-  .madeWith { padding: 5px 8px; gap: 4px; font-size: clamp(10px, 3.6vw, 12px); }
+  .madeWith {
+    padding: 5px 8px;
+    gap: 4px;
+    font-size: clamp(10px, 3.6vw, 12px);
+  }
 }
