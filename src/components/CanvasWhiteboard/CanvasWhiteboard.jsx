@@ -7,30 +7,50 @@ export default function CanvasWhiteboard({ theme, tool }) {
   const dprRef = React.useRef(1)
   const rafRef = React.useRef(0)
   const roRef = React.useRef(null)
-  const lastTapRef = React.useRef({ t: 0, x: 0, y: 0 })
+  const lastTapRef = React.useRef({
+    t: 0, x: 0, y: 0
+  })
 
-  const viewRef = React.useRef({ panX: 0, panY: 0, scale: 1 })
+  const viewRef = React.useRef({
+    panX: 0, panY: 0, scale: 1
+  })
   const stateRef = React.useRef({
-    drawing: false, panning: false, spaceHeld: false,
-    lastX: 0, lastY: 0, pointerId: null, pinch: null
+    drawing: false,
+    panning: false,
+    spaceHeld: false,
+    lastX: 0, lastY: 0,
+    pointerId: null,
+    pinch: null
   })
   const strokesRef = React.useRef([])
 
   const themeColors = React.useMemo(
     () => theme === 'dark'
-      ? { bg: '#0f1115', grid: '#2a2f3a', stroke: '#e6e6e6' }
-      : { bg: '#ffffff', grid: '#e6e6e6', stroke: '#222222' },
+      ? {
+        bg: '#0f1115',
+        grid: '#2a2f3a',
+        stroke: '#e6e6e6'
+      }
+      : {
+        bg: '#ffffff',
+        grid: '#e6e6e6',
+        stroke: '#222222'
+      },
     [theme]
   )
 
   const screenToWorld = React.useCallback((sx, sy) => {
     const { panX, panY, scale } = viewRef.current
-    return { x: (sx - panX) / scale, y: (sy - panY) / scale }
+    return {
+      x: (sx - panX) / scale,
+      y: (sy - panY) / scale
+    }
   }, [])
 
   const resizeCanvas = React.useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas)
+      return
     const dpr = window.devicePixelRatio || 1
     dprRef.current = dpr
     const rect = canvas.getBoundingClientRect()
@@ -44,7 +64,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
   const draw = React.useCallback(() => {
     const canvas = canvasRef.current
     const ctx = ctxRef.current
-    if (!canvas || !ctx) return
+    if (!canvas || !ctx)
+      return
     const { panX, panY, scale } = viewRef.current
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -53,7 +74,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
     ctx.translate(panX, panY)
     ctx.scale(scale, scale)
     for (const s of strokesRef.current) {
-      if (!s.points.length) continue
+      if (!s.points.length)
+        continue
       ctx.beginPath()
       ctx.lineJoin = s.join || 'round'
       ctx.lineCap = s.cap || 'round'
@@ -90,7 +112,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
 
   React.useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas)
+      return
     resizeCanvas()
     rafRef.current = requestAnimationFrame(draw)
 
@@ -99,10 +122,18 @@ export default function CanvasWhiteboard({ theme, tool }) {
     roRef.current = ro
 
     const onKeyDown = (e) => {
-      if (e.code === 'Space') { e.preventDefault(); stateRef.current.spaceHeld = true; canvas.style.cursor = 'grabbing' }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        stateRef.current.spaceHeld = true;
+        canvas.style.cursor = 'grabbing'
+      }
     }
     const onKeyUp = (e) => {
-      if (e.code === 'Space') { e.preventDefault(); stateRef.current.spaceHeld = false; if (!stateRef.current.panning) canvas.style.cursor = 'crosshair' }
+      if (e.code === 'Space') {
+        e.preventDefault(); stateRef.current.spaceHeld = false;
+        if (!stateRef.current.panning)
+          canvas.style.cursor = 'crosshair'
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     window.addEventListener('keyup', onKeyUp)
@@ -146,13 +177,16 @@ export default function CanvasWhiteboard({ theme, tool }) {
       window.removeEventListener('keyup', onKeyUp)
       canvas.removeEventListener('wheel', onWheelNative)
       document.removeEventListener('pointercancel', onPointerCancelDoc)
-      if (roRef.current) roRef.current.disconnect()
+      if (roRef.current)
+        roRef.current.disconnect()
       cancelAnimationFrame(rafRef.current)
     }
   }, [resizeCanvas, draw])
 
   React.useEffect(() => {
-    for (const s of strokesRef.current) if (!s.mode) s.mode = 'theme'
+    for (const s of strokesRef.current)
+      if (!s.mode)
+        s.mode = 'theme'
   }, [theme])
 
   const onPointerDown = (e) => {
@@ -163,9 +197,15 @@ export default function CanvasWhiteboard({ theme, tool }) {
       const dx = e.clientX - lastTapRef.current.x
       const dy = e.clientY - lastTapRef.current.y
       if (dt < 300 && (dx * dx + dy * dy) < 30 * 30) {
-        viewRef.current.panX = 0; viewRef.current.panY = 0; viewRef.current.scale = 1
+        viewRef.current.panX = 0;
+        viewRef.current.panY = 0;
+        viewRef.current.scale = 1
       }
-      lastTapRef.current = { t: now, x: e.clientX, y: e.clientY }
+      lastTapRef.current = {
+        t: now,
+        x: e.clientX,
+        y: e.clientY
+      }
 
       touchCache.set(e.pointerId, { x: e.clientX, y: e.clientY })
       if (touchCache.size === 2 && !stateRef.current.pinch) {
@@ -196,7 +236,10 @@ export default function CanvasWhiteboard({ theme, tool }) {
     stateRef.current.panning = panning
     stateRef.current.drawing = !panning && e.button === 0
 
-    if (stateRef.current.panning) { canvas.style.cursor = 'grabbing'; return }
+    if (stateRef.current.panning) {
+      canvas.style.cursor = 'grabbing';
+      return
+    }
 
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
@@ -204,8 +247,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
       const stroke = {
         mode: (t.kind !== 'eraser' && t.color) ? 'custom' : 'theme',
         size: t.kind === 'marker' ? Math.max(4, t.size * 2)
-             : t.kind === 'highlighter' ? Math.max(10, t.size * 6)
-             : t.kind === 'eraser' ? Math.max(8, t.size * 6) : (t.size || 2),
+          : t.kind === 'highlighter' ? Math.max(10, t.size * 6)
+            : t.kind === 'eraser' ? Math.max(8, t.size * 6) : (t.size || 2),
         alpha: t.kind === 'highlighter' ? 0.28 : 1,
         erase: t.kind === 'eraser',
         color: (t.kind !== 'eraser') ? t.color : undefined,
@@ -218,7 +261,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
 
   const onPointerMove = (e) => {
     if (e.pointerType === 'touch') {
-      if (touchCache.has(e.pointerId)) touchCache.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (touchCache.has(e.pointerId))
+        touchCache.set(e.pointerId, { x: e.clientX, y: e.clientY })
       const pinch = stateRef.current.pinch
       if (pinch) {
         const a = touchCache.get(pinch.id1)
@@ -237,7 +281,9 @@ export default function CanvasWhiteboard({ theme, tool }) {
         }
       }
     }
-    if (stateRef.current.pointerId !== e.pointerId) return
+
+    if (stateRef.current.pointerId !== e.pointerId)
+      return
     const dx = e.clientX - stateRef.current.lastX
     const dy = e.clientY - stateRef.current.lastY
     stateRef.current.lastX = e.clientX
@@ -250,7 +296,8 @@ export default function CanvasWhiteboard({ theme, tool }) {
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY)
       const stroke = strokesRef.current[strokesRef.current.length - 1]
-      if (stroke) stroke.points.push({ x, y, p: e.pressure ?? 0.5 })
+      if (stroke)
+        stroke.points.push({ x, y, p: e.pressure ?? 0.5 })
       return
     }
   }
@@ -259,19 +306,24 @@ export default function CanvasWhiteboard({ theme, tool }) {
     if (e.pointerType === 'touch') {
       touchCache.delete(e.pointerId)
       const pinch = stateRef.current.pinch
-      if (pinch && (e.pointerId === pinch.id1 || e.pointerId === pinch.id2)) stateRef.current.pinch = null
+      if (pinch && (e.pointerId === pinch.id1 || e.pointerId === pinch.id2))
+        stateRef.current.pinch = null
     }
-    if (stateRef.current.pointerId !== e.pointerId) return
+    if (stateRef.current.pointerId !== e.pointerId)
+      return
     stateRef.current.pointerId = null
     if (stateRef.current.panning) {
       stateRef.current.panning = false
-      if (!stateRef.current.spaceHeld) canvasRef.current.style.cursor = 'crosshair'
+      if (!stateRef.current.spaceHeld)
+        canvasRef.current.style.cursor = 'crosshair'
     }
     stateRef.current.drawing = false
   }
 
   const onDoubleClick = () => {
-    viewRef.current.panX = 0; viewRef.current.panY = 0; viewRef.current.scale = 1
+    viewRef.current.panX = 0;
+    viewRef.current.panY = 0;
+    viewRef.current.scale = 1
   }
 
   return (
@@ -311,10 +363,18 @@ function drawGrid(ctx, canvas, view, themeColors) {
   const endX = Math.ceil(right / grid) * grid
   const startY = Math.floor(top / grid) * grid
   const endY = Math.ceil(bottom / grid) * grid
-  for (let x = startX; x <= endX; x += grid) { ctx.moveTo(x, startY); ctx.lineTo(x, endY) }
-  for (let y = startY; y <= endY; y += grid) { ctx.moveTo(startX, y); ctx.lineTo(endX, y) }
+  for (let x = startX; x <= endX; x += grid) {
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, endY)
+  }
+  for (let y = startY; y <= endY; y += grid) {
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y)
+  }
   ctx.stroke()
   ctx.restore()
 }
 
-function clamp(v, a, b) { return Math.min(b, Math.max(a, v)) }
+function clamp(v, a, b) {
+  return Math.min(b, Math.max(a, v))
+}
