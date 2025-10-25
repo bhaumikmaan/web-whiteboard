@@ -10,9 +10,10 @@ export default function Toaster({ theme, onToggleTheme }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="wb-toaster"
-        title={open ? 'Close menu' : 'Open menu'}
+        aria-label="Open help"
+        title={open ? 'Close help' : 'Open help'}
       >
-        ⋯
+        ?
       </button>
       <div
         id="wb-toaster"
@@ -20,7 +21,7 @@ export default function Toaster({ theme, onToggleTheme }) {
       >
         <div className={styles.toasterContent}>
           <div className={styles.toasterRow}>
-            <span className={styles.toasterTitle}>Whiteboard</span>
+            <span className={styles.toasterTitle}>Help</span>
             <button
               className={styles.chip}
               onClick={onToggleTheme}
@@ -29,9 +30,13 @@ export default function Toaster({ theme, onToggleTheme }) {
               {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
             </button>
           </div>
-          <div className={styles.toasterHelp}>
-            Draw: 1‑finger drag • Pan: 2‑finger drag • Zoom: Pinch • Reset: Double‑tap
-          </div>
+          <ul className={styles.helpList} role="list">
+            <li>Draw: Left mouse / 1‑finger drag</li>
+            <li>Pan: Hold Space and drag, or middle mouse</li>
+            <li>Touch pan: 2‑finger drag</li>
+            <li>Zoom: Mouse wheel or pinch</li>
+            <li>Reset view: Double‑click / Double‑tap</li>
+          </ul>
         </div>
       </div>
     </>

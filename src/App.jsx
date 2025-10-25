@@ -30,13 +30,6 @@ export default function App() {
       <CanvasWhiteboard theme={theme} tool={tool} />
       <BrushPalette theme={theme} tool={tool} onChange={setTool} />
 
-      <div className="hud">
-        <div className="panel">
-          <strong>Controls</strong><br />
-          Draw: 1‑finger drag • Pan: 2‑finger drag or Space+Left mouse • Zoom: Pinch or Wheel • Reset: Double‑tap / Double‑click
-        </div>
-      </div>
-
       <Toaster
         theme={theme}
         onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
