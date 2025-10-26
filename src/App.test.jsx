@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import App from './App'
 
-test('shows controls panel', () => {
+test('opens help and shows instructions', () => {
   render(<App />)
-  expect(screen.getByText('Controls')).toBeInTheDocument()
+  const helpBtn = screen.getByRole('button', { name: /open help|close help|^\?$/i })
+  fireEvent.click(helpBtn)
+
+  expect(screen.getByText('Help')).toBeInTheDocument()
+  expect(screen.getByText('Draw: Left mouse / 1‑finger drag')).toBeInTheDocument()
 })
