@@ -1,15 +1,15 @@
 .toasterToggle {
   position: fixed;
   right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  top: calc(12px + env(safe-area-inset-top, 0px));
   z-index: 20;
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 8px;
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   color: var(--text);
-  font: 600 18px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font: 700 18px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   cursor: pointer;
   backdrop-filter: blur(6px);
   display: inline-flex;
@@ -25,9 +25,9 @@
 .toaster {
   position: fixed;
   right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  top: calc(60px + env(safe-area-inset-top, 0px));
   z-index: 19;
-  transform: translateY(12px);
+  transform: translateY(-12px);
   opacity: 0;
   pointer-events: none;
   transition: transform 160ms ease, opacity 160ms ease;
@@ -45,7 +45,7 @@
   background: var(--panel-bg);
   color: var(--text);
   border: 1px solid var(--panel-border);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 10px 12px;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   backdrop-filter: blur(6px);
@@ -73,17 +73,19 @@
   cursor: pointer;
 }
 
-.toasterHelp {
+.helpList {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+  display: grid;
+  gap: 6px;
   font-size: 12px;
-  opacity: 0.85;
+  line-height: 1.25;
+  white-space: normal;
 }
 
-@media (hover: hover) and (pointer: fine) {
-
-  .toasterToggle,
-  .toaster {
-    display: none;
-  }
+.helpList li { 
+  margin: 0; 
 }
 
 @media (hover: none) and (pointer: coarse) {
