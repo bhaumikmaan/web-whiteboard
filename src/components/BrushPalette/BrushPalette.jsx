@@ -2,7 +2,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import styles from './BrushPalette.module.css'
 
-export default function BrushPalette({ theme, tool, onChange }) {
+export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
   const [showSize, setShowSize] = React.useState(false)
   const [showStyle, setShowStyle] = React.useState(false)
   const [showColor, setShowColor] = React.useState(false)
@@ -60,6 +60,19 @@ export default function BrushPalette({ theme, tool, onChange }) {
 
   return (
     <div className={styles.palette} role="toolbar" aria-label="Brush tools">
+      <button
+        className={styles.paletteBtn}
+        onClick={onUndo}
+        title="Undo (Ctrl/Cmd+Z)"
+        aria-label="Undo"
+      >↩︎</button>
+      <button
+        className={styles.paletteBtn}
+        onClick={onRedo}
+        title="Redo (Ctrl/Cmd+Shift+Z)"
+        aria-label="Redo"
+      >↪︎</button>
+
       <button
         ref={colorBtnRef}
         className={styles.paletteBtn}

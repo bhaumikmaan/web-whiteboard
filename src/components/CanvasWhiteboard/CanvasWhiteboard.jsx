@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { forwardRef, useImperativeHandle } from 'react'
 import styles from './CanvasWhiteboard.module.css'
 
-export default function CanvasWhiteboard({ theme, tool }) {
+const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
   const canvasRef = React.useRef(null)
   const ctxRef = React.useRef(null)
   const dprRef = React.useRef(1)
@@ -23,6 +23,7 @@ export default function CanvasWhiteboard({ theme, tool }) {
     pinch: null
   })
   const strokesRef = React.useRef([])
+  const redoRef = React.useRef([])
 
   const themeColors = React.useMemo(
     () => theme === 'dark'
@@ -126,6 +127,30 @@ export default function CanvasWhiteboard({ theme, tool }) {
         e.preventDefault();
         stateRef.current.spaceHeld = true;
         canvas.style.cursor = 'grabbing'
+        return
+      }
+
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+
+      // Undo: Cmd/Ctrl+Z
+      if (e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        if (stateRef.current.drawing) {
+          stateRef.current.drawing = false
+        }
+        const s = strokesRef.current.pop()
+        if (s) redoRef.current.push(s)
+        return
+      }
+
+      // Redo: Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y
+      if ((e.key.toLowerCase() === 'z' && e.shiftKey) ||
+        e.key.toLowerCase() === 'y') {
+        e.preventDefault()
+        const s = redoRef.current.pop()
+        if (s) strokesRef.current.push(s)
+        return
       }
     }
     const onKeyUp = (e) => {
@@ -242,6 +267,7 @@ export default function CanvasWhiteboard({ theme, tool }) {
     }
 
     if (stateRef.current.drawing) {
+      redoRef.current.length = 0
       const { x, y } = screenToWorld(e.clientX, e.clientY)
       const t = tool || { kind: 'pen', size: 2, color: undefined }
       const stroke = {
@@ -319,12 +345,39 @@ export default function CanvasWhiteboard({ theme, tool }) {
     }
     stateRef.current.drawing = false
   }
+  React.useEffect(() => {
+    const onEsc = (e) => {
+      if (e.key === 'Escape' && stateRef.current.drawing) {
+        e.preventDefault()
+        const last = strokesRef.current[strokesRef.current.length - 1]
+        if (last && last.points && last.points.length <= 1) {
+          strokesRef.current.pop()
+        }
+        stateRef.current.drawing = false
+      }
+    }
+    window.addEventListener('keydown', onEsc)
+    return () => window.removeEventListener('keydown', onEsc)
+  }, [])
 
   const onDoubleClick = () => {
     viewRef.current.panX = 0;
     viewRef.current.panY = 0;
     viewRef.current.scale = 1
   }
+  const undo = () => {
+    const s = strokesRef.current.pop()
+    if (s) redoRef.current.push(s)
+  }
+  const redo = () => {
+    const s = redoRef.current.pop()
+    if (s) strokesRef.current.push(s)
+  }
+
+  useImperativeHandle(ref, () => ({
+    undo,
+    redo,
+  }), [])
 
   return (
     <canvas
@@ -342,7 +395,7 @@ export default function CanvasWhiteboard({ theme, tool }) {
       }}
     />
   )
-}
+})
 
 const touchCache = new Map()
 
@@ -378,3 +431,5 @@ function drawGrid(ctx, canvas, view, themeColors) {
 function clamp(v, a, b) {
   return Math.min(b, Math.max(a, v))
 }
+
+export default CanvasWhiteboard

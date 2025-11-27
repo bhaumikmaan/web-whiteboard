@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import './App.css'
 
 import CanvasWhiteboard from './components/CanvasWhiteboard'
@@ -11,6 +11,14 @@ export default function App() {
     (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'
   )
   const [tool, setTool] = React.useState({ kind: 'pen', size: 2, color: undefined })
+  const canvasRef = useRef(null)
+
+  const onUndo = () => {
+    if (canvasRef.current) canvasRef.current.undo()
+  }
+  const onRedo = () => {
+    if (canvasRef.current) canvasRef.current.redo()
+  }
 
   // Keep theme variables on :root so portals/popouts inherit them
   React.useEffect(() => {
@@ -27,8 +35,8 @@ export default function App() {
 
   return (
     <div className={`App ${theme}`}>
-      <CanvasWhiteboard theme={theme} tool={tool} />
-      <BrushPalette theme={theme} tool={tool} onChange={setTool} />
+      <CanvasWhiteboard ref={canvasRef} theme={theme} tool={tool} />
+      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
 
       <div className="hud">
         <div className="panel">
