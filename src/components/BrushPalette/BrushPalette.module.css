@@ -28,6 +28,11 @@
   font-size: 18px;
 }
 
+.paletteBtn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .paletteBtn:hover {
   opacity: 0.9;
 }
