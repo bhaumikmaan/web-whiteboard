@@ -75,6 +75,12 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     ctx.translate(panX, panY)
     ctx.scale(scale, scale)
     for (const s of strokesRef.current) {
+      if (s.mode === 'image' && s.image) {
+        ctx.globalAlpha = 1
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.drawImage(s.image, s.x, s.y, s.width, s.height)
+        continue
+      }
       if (!s.points.length)
         continue
       ctx.beginPath()
@@ -213,6 +219,73 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
       if (!s.mode)
         s.mode = 'theme'
   }, [theme])
+
+  React.useEffect(() => {
+    const handlePaste = async (e) => {
+      const active = document.activeElement
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+        return
+      }
+
+      e.preventDefault()
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.read === 'function') {
+          const items = await navigator.clipboard.read()
+          for (const item of items) {
+            const type = item.types.find(t => t.startsWith('image/'))
+            if (!type) continue
+            const blob = await item.getType(type)
+            pasteImageBlob(blob)
+            return
+          }
+        }
+      } catch {
+        // fall through to legacy path
+      }
+
+      const files = e.clipboardData?.files || []
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          pasteImageBlob(file)
+          return
+        }
+      }
+    }
+
+    const pasteImageBlob = (blob) => {
+      const img = new Image()
+      img.onload = () => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const rect = canvas.getBoundingClientRect()
+        const { panX, panY, scale } = viewRef.current
+        const cx = (rect.width / 2 - panX) / scale
+        const cy = (rect.height / 2 - panY) / scale
+        const w = img.width
+        const h = img.height
+
+        // Draw directly into strokes as an image stroke
+        const stroke = {
+          mode: 'image',
+          image: img,
+          x: cx - w / 2,
+          y: cy - h / 2,
+          width: w,
+          height: h,
+          points: [], // not used, but keeps shape
+        }
+        strokesRef.current.push(stroke)
+        // Clear redo history on new content
+        redoRef.current.length = 0
+      }
+      img.src = URL.createObjectURL(blob)
+    }
+
+    window.addEventListener('paste', handlePaste)
+    return () => window.removeEventListener('paste', handlePaste)
+  }, [])
+
 
   const onPointerDown = (e) => {
     const canvas = canvasRef.current
