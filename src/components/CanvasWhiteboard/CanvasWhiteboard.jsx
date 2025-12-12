@@ -20,7 +20,10 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     spaceHeld: false,
     lastX: 0, lastY: 0,
     pointerId: null,
-    pinch: null
+    pinch: null,
+    selectedImageIndex: -1,
+    dragHandle: null,
+    dragOffsetX: 0, dragOffsetY: 0
   })
   const strokesRef = React.useRef([])
   const redoRef = React.useRef([])
@@ -74,11 +77,51 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     ctx.save()
     ctx.translate(panX, panY)
     ctx.scale(scale, scale)
-    for (const s of strokesRef.current) {
+    for (let i = 0; i < strokesRef.current.length; i++) {
+      const s = strokesRef.current[i]
+
       if (s.mode === 'image' && s.image) {
+        ctx.save()
         ctx.globalAlpha = 1
         ctx.globalCompositeOperation = 'source-over'
         ctx.drawImage(s.image, s.x, s.y, s.width, s.height)
+        ctx.restore()
+
+        if (i === stateRef.current.selectedImageIndex) {
+          const strokeWidth = 2 / Math.max(0.0001, viewRef.current.scale)
+
+          ctx.strokeStyle = '#00f'
+          ctx.lineWidth = strokeWidth
+          ctx.setLineDash([5, 5])
+          ctx.strokeRect(s.x, s.y, s.width, s.height)
+          ctx.setLineDash([])
+
+          const handleSize = 10 / viewRef.current.scale
+          ctx.fillStyle = '#00f'
+          ctx.strokeStyle = '#fff'
+          ctx.lineWidth = 1 / viewRef.current.scale
+
+          const corners = [
+            { x: s.x, y: s.y },
+            { x: s.x + s.width, y: s.y },
+            { x: s.x + s.width, y: s.y + s.height },
+            { x: s.x, y: s.y + s.height }
+          ]
+          corners.forEach(corner => {
+            ctx.fillRect(
+              corner.x - handleSize / 2,
+              corner.y - handleSize / 2,
+              handleSize,
+              handleSize
+            )
+            ctx.strokeRect(
+              corner.x - handleSize / 2,
+              corner.y - handleSize / 2,
+              handleSize,
+              handleSize
+            )
+          })
+        }
         continue
       }
       if (!s.points.length)
@@ -332,7 +375,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     stateRef.current.lastX = e.clientX
     stateRef.current.lastY = e.clientY
     stateRef.current.panning = panning
-    stateRef.current.drawing = !panning && e.button === 0
+    stateRef.current.drawing = !panning && e.button === 0 && tool?.kind !== 'select'
 
     if (stateRef.current.panning) {
       canvas.style.cursor = 'grabbing';
@@ -355,6 +398,35 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
         points: [{ x, y, p: e.pressure ?? 0.5 }],
       }
       strokesRef.current.push(stroke)
+    }
+    if (!stateRef.current.drawing && !stateRef.current.panning && tool?.kind === 'select') {
+      const { x, y } = screenToWorld(e.clientX, e.clientY)
+
+      // Check if clicking on an image handle first
+      const handle = getHandleAt(x, y, e)
+      if (handle) {
+        stateRef.current.dragHandle = handle.type
+        stateRef.current.dragOffsetX = handle.offsetX
+        stateRef.current.dragOffsetY = handle.offsetY
+        canvas.setPointerCapture(e.pointerId)
+        return
+      }
+
+      // Check if clicking on an image bounding box
+      const imgIndex = getImageAt(x, y)
+      if (imgIndex >= 0) {
+        stateRef.current.selectedImageIndex = imgIndex
+        const img = strokesRef.current[imgIndex]
+        stateRef.current.dragHandle = 'move'
+        stateRef.current.dragOffsetX = x - img.x
+        stateRef.current.dragOffsetY = y - img.y
+        canvas.setPointerCapture(e.pointerId)
+        return
+      }
+
+
+      // Deselect if clicking empty space
+      stateRef.current.selectedImageIndex = -1
     }
   }
 
@@ -399,6 +471,46 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
         stroke.points.push({ x, y, p: e.pressure ?? 0.5 })
       return
     }
+    if (stateRef.current.selectedImageIndex >= 0 && stateRef.current.dragHandle) {
+      const selIndex = stateRef.current.selectedImageIndex
+      const img = strokesRef.current[selIndex]
+      const { x: wx, y: wy } = screenToWorld(e.clientX, e.clientY)
+
+      if (stateRef.current.dragHandle === 'move') {
+        // Drag entire image
+        img.x = wx - stateRef.current.dragOffsetX
+        img.y = wy - stateRef.current.dragOffsetY
+      } else {
+        // Resize based on handle
+        switch (stateRef.current.dragHandle) {
+          case 'tl':
+            img.width = img.x + img.width - wx
+            img.height = img.y + img.height - wy
+            img.x = wx
+            img.y = wy
+            break
+          case 'tr':
+            img.width = wx - img.x
+            img.height = img.y + img.height - wy
+            img.y = wy
+            break
+          case 'bl':
+            img.width = img.x + img.width - wx
+            img.height = wy - img.y
+            img.x = wx
+            break
+          case 'br':
+            img.width = wx - img.x
+            img.height = wy - img.y
+            break
+        }
+        // Enforce minimum size
+        img.width = Math.max(10, img.width)
+        img.height = Math.max(10, img.height)
+      }
+      return
+    }
+
   }
 
   const onPointerUp = (e) => {
@@ -417,6 +529,9 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
         canvasRef.current.style.cursor = 'crosshair'
     }
     stateRef.current.drawing = false
+    if (stateRef.current.dragHandle) {
+      stateRef.current.dragHandle = null
+    }
   }
   React.useEffect(() => {
     const onEsc = (e) => {
@@ -446,6 +561,51 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     const s = redoRef.current.pop()
     if (s) strokesRef.current.push(s)
   }
+  const getImageAt = (wx, wy) => {
+    for (let i = 0; i < strokesRef.current.length; i++) {
+      const stroke = strokesRef.current[i]
+      if (stroke.mode === 'image') {
+        if (wx >= stroke.x && wx <= stroke.x + stroke.width &&
+          wy >= stroke.y && wy <= stroke.y + stroke.height) {
+          return i
+        }
+      }
+    }
+    return -1
+  }
+
+  // NEW: Check if clicking on resize handles (20px hit area, screen space)
+  const getHandleAt = (wx, wy, e) => {
+    const selIndex = stateRef.current.selectedImageIndex
+    if (selIndex < 0) return null
+
+    const stroke = strokesRef.current[selIndex]
+    const rect = canvasRef.current.getBoundingClientRect()
+    const handleSize = 20 / viewRef.current.scale
+
+    const handles = [
+      { type: 'tl', hx: stroke.x, hy: stroke.y },
+      { type: 'tr', hx: stroke.x + stroke.width, hy: stroke.y },
+      { type: 'bl', hx: stroke.x, hy: stroke.y + stroke.height },
+      { type: 'br', hx: stroke.x + stroke.width, hy: stroke.y + stroke.height },
+    ]
+
+    for (const h of handles) {
+      const sx = h.hx * viewRef.current.scale + viewRef.current.panX + rect.left
+      const sy = h.hy * viewRef.current.scale + viewRef.current.panY + rect.top
+      const dx = e.clientX - sx
+      const dy = e.clientY - sy
+      if (Math.hypot(dx, dy) < handleSize) {
+        return {
+          type: h.type,
+          offsetX: dx / viewRef.current.scale,
+          offsetY: dy / viewRef.current.scale,
+        }
+      }
+    }
+    return null
+  }
+
 
   useImperativeHandle(ref, () => ({
     undo,

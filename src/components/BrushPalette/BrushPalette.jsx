@@ -110,6 +110,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
           aria-label="Brush style menu"
         >
           {[
+            { key: 'select', label: 'Select', icon: '🔲' },
             { key: 'pen', label: 'Pen', icon: '🖊' },
             { key: 'marker', label: 'Marker', icon: '🖍' },
             { key: 'highlighter', label: 'Highlighter', icon: '🖌' },
