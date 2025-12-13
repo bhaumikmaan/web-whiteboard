@@ -10,6 +10,7 @@ export default function Toaster({ theme, onToggleTheme }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="wb-toaster"
+        aria-label={open ? 'Close help' : 'Open help'}
         title={open ? 'Close menu' : 'Open menu'}
       >
         ⋯

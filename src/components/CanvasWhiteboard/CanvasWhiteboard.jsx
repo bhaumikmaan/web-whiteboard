@@ -264,6 +264,17 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
   }, [theme])
 
   React.useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    if (tool?.kind === 'select') {
+      canvas.style.cursor = 'grab'
+    } else {
+      canvas.style.cursor = 'crosshair'
+    }
+  }, [tool])
+
+
+  React.useEffect(() => {
     const handlePaste = async (e) => {
       const active = document.activeElement
       if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {

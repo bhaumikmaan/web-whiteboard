@@ -28,6 +28,26 @@
   font-size: 18px;
 }
 
+.activeBtn {
+  background: var(--panel-accent-bg, rgba(0, 120, 255, 0.12));
+  border-color: var(--panel-accent-border, rgba(0, 120, 255, 0.6));
+}
+
+.group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.historyBtn {
+  opacity: 0.9;
+}
+
+.historyBtn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+
 .paletteBtn[disabled] {
   opacity: 0.5;
   pointer-events: none;
@@ -38,7 +58,9 @@
 }
 
 .active {
-  background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%);
+  background: color-mix(in oklab, var(--panel-bg) 40%, var(--accent, #3b82f6) 60%);
+  border-color: var(--accent, #3b82f6);
+  color: #fff;
 }
 
 .palettePop {
@@ -70,6 +92,16 @@
   font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
+.paletteItem.active {
+  background: color-mix(in oklab, var(--panel-bg) 30%, #2563eb 70%);
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.paletteItem.active span[aria-hidden="true"] {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
 .swatch {
   display: inline-block;
   background: currentColor;
@@ -86,6 +118,14 @@
   border-radius: 50%;
   border: 1px solid var(--panel-border);
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) inset;
+}
+
+.paletteItem.active .swatch {
+  background: #ffffff;
+}
+
+.paletteItem.color.active .swatchDot {
+  box-shadow: 0 0 0 2px #ffffff inset;
 }
 
 @media (hover: none) and (pointer: coarse) {
