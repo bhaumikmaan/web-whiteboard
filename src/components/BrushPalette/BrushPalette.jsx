@@ -2,7 +2,7 @@ import React from 'react'
 import { createPortal } from 'react-dom'
 import styles from './BrushPalette.module.css'
 
-export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
+export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, panMode, onTogglePan }) {
   const [showSize, setShowSize] = React.useState(false)
   const [showStyle, setShowStyle] = React.useState(false)
   const [showColor, setShowColor] = React.useState(false)
@@ -100,6 +100,12 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
         aria-controls={sizeId}
         title="Pen width"
       >↕️</button>
+      <button
+        className={`${styles.paletteBtn} ${panMode ? styles.active : ''}`}
+        onClick={onTogglePan}
+        title="Pan mode"
+        aria-pressed={panMode}
+      >🖐</button>
 
       {showStyle && createPortal(
         <div

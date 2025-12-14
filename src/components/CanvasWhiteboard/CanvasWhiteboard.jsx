@@ -1,7 +1,7 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import styles from './CanvasWhiteboard.module.css'
 
-const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
+const CanvasWhiteboard = forwardRef(({ theme, tool , panMode}, ref) => {
   const canvasRef = React.useRef(null)
   const ctxRef = React.useRef(null)
   const dprRef = React.useRef(1)
@@ -325,7 +325,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
 
     const { spaceHeld } = stateRef.current
     const isMiddle = e.button === 1
-    const panning = spaceHeld || isMiddle
+    const panning = spaceHeld || isMiddle || panMode
 
     canvas.setPointerCapture(e.pointerId)
     stateRef.current.pointerId = e.pointerId

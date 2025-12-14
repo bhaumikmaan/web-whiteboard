@@ -20,6 +20,8 @@ export default function App() {
     if (canvasRef.current) canvasRef.current.redo()
   }
 
+  const [panMode, setPanMode] = React.useState(false)
+
   // Keep theme variables on :root so portals/popouts inherit them
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -35,8 +37,8 @@ export default function App() {
 
   return (
     <div className={`App ${theme}`}>
-      <CanvasWhiteboard ref={canvasRef} theme={theme} tool={tool} />
-      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
+      <CanvasWhiteboard ref={canvasRef} theme={theme} tool={tool} panMode={panMode} />
+      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} panMode={panMode} onTogglePan={() => setPanMode(v => !v)} />
 
       <Toaster
         theme={theme}
