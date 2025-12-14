@@ -273,6 +273,72 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     }
   }, [tool])
 
+  React.useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const onDragOver = (e) => {
+      e.preventDefault()
+    }
+
+    const onDrop = (e) => {
+      e.preventDefault()
+      const files = e.dataTransfer?.files || []
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          pasteImageBlob(file)
+          break
+        }
+      }
+    }
+
+    canvas.addEventListener('dragover', onDragOver)
+    canvas.addEventListener('drop', onDrop)
+
+    return () => {
+      canvas.removeEventListener('dragover', onDragOver)
+      canvas.removeEventListener('drop', onDrop)
+    }
+  }, [])
+  
+  const pasteImageBlob = (blob) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const { panX, panY, scale } = viewRef.current
+
+      // viewport size in world units
+      const viewW = rect.width / scale
+      const viewH = rect.height / scale
+
+      // fit image into ~60% of viewport
+      const maxW = viewW * 0.6
+      const maxH = viewH * 0.6
+      const factor = Math.min(1, maxW / img.width, maxH / img.height)
+
+      const w = img.width * factor
+      const h = img.height * factor
+
+      const cx = (rect.width / 2 - panX) / scale
+      const cy = (rect.height / 2 - panY) / scale
+
+      const stroke = {
+        mode: 'image',
+        image: img,
+        x: cx - w / 2,
+        y: cy - h / 2,
+        width: w,
+        height: h,
+        points: [],
+      }
+      strokesRef.current.push(stroke)
+      redoRef.current.length = 0
+    }
+    img.src = URL.createObjectURL(blob)
+  }
 
   React.useEffect(() => {
     const handlePaste = async (e) => {
@@ -304,36 +370,6 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
           return
         }
       }
-    }
-
-    const pasteImageBlob = (blob) => {
-      const img = new Image()
-      img.onload = () => {
-        const canvas = canvasRef.current
-        if (!canvas) return
-
-        const rect = canvas.getBoundingClientRect()
-        const { panX, panY, scale } = viewRef.current
-        const cx = (rect.width / 2 - panX) / scale
-        const cy = (rect.height / 2 - panY) / scale
-        const w = img.width
-        const h = img.height
-
-        // Draw directly into strokes as an image stroke
-        const stroke = {
-          mode: 'image',
-          image: img,
-          x: cx - w / 2,
-          y: cy - h / 2,
-          width: w,
-          height: h,
-          points: [], // not used, but keeps shape
-        }
-        strokesRef.current.push(stroke)
-        // Clear redo history on new content
-        redoRef.current.length = 0
-      }
-      img.src = URL.createObjectURL(blob)
     }
 
     window.addEventListener('paste', handlePaste)
