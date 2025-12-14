@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import styles from './BrushPalette.module.css'
+import iro from '@jaames/iro'
 
 export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
   const [showSize, setShowSize] = React.useState(false)
@@ -12,6 +13,8 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   const styleBtnRef = React.useRef(null)
   const sizeBtnRef = React.useRef(null)
   const colorBtnRef = React.useRef(null)
+  const colorPickerRef = React.useRef(null)
+  const iroRef = React.useRef(null)
   const sizeId = 'menu-sizes'
   const styleId = 'menu-styles'
   const colorId = 'menu-colors'
@@ -23,10 +26,6 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   const setKind = (k) => {
     onChange(prev => ({ ...prev, kind: k }));
     setShowStyle(false)
-  }
-  const setColor = (css) => {
-    onChange(prev => ({ ...prev, color: css }));
-    setShowColor(false)
   }
 
   const anchorFrom = (el, setPos) => {
@@ -57,6 +56,34 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
     setShowStyle(false);
     setShowSize(false)
   }
+
+  useEffect(() => {
+    if (!showColor) {
+      if (iroRef.current) {
+        iroRef.current.off('*')
+        iroRef.current = null
+      }
+      return
+    }
+  
+    if (!colorPickerRef.current) return
+  
+    iroRef.current = new iro.ColorPicker(colorPickerRef.current, {
+      width: 180,
+      color: tool.color || '#ffffff',
+      layout: [
+        { component: iro.ui.Wheel },
+        { component: iro.ui.Slider, options: { sliderType: 'value' } }
+      ]
+    })
+  
+    iroRef.current.on('color:change', (color) => {
+      onChange(prev => ({
+        ...prev,
+        color: color.hexString
+      }))
+    })
+  }, [showColor])
 
   return (
     <div className={styles.palette} role="toolbar" aria-label="Brush tools">
@@ -155,35 +182,19 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
         </div>,
         document.body)}
 
-      {showColor && createPortal(
-        <div
-          id={colorId}
-          role="menu"
-          className={styles.palettePop}
-          style={{ top: colorPos.top, left: colorPos.left }}
-          aria-label="Pen colors"
-        >
-          {[
-            { name: 'Blue', css: 'blue' },
-            { name: 'Red', css: 'red' },
-            { name: 'Green', css: 'green' },
-            { name: 'Yellow', css: 'yellow' },
-            { name: 'Pink', css: 'pink' }
-          ].map(c => (
-            <button
-              key={c.name}
-              role="menuitemradio"
-              aria-checked={tool.color === c.css}
-              className={`${styles.paletteItem} ${styles.color} ${tool.color === c.css ? styles.active : ''}`}
-              onClick={() => setColor(c.css)}
-              title={c.name}
-            >
-              <span className={styles.swatchDot} style={{ background: c.css }} aria-hidden="true" />
-              {c.name}
-            </button>
-          ))}
-        </div>,
-        document.body)}
+        {showColor && createPortal(
+          <div
+            id={colorId}
+            role="menu"
+            className={styles.palettePop}
+            style={{ top: colorPos.top, left: colorPos.left }}
+            aria-label="Color picker"
+          >
+            <div ref={colorPickerRef} />
+          </div>,
+          document.body
+        )}
+
     </div>
   )
 }
