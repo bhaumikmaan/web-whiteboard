@@ -300,7 +300,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
       canvas.removeEventListener('drop', onDrop)
     }
   }, [])
-  
+
   const pasteImageBlob = (blob) => {
     const img = new Image()
     img.onload = () => {
@@ -474,6 +474,10 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
 
       // Deselect if clicking empty space
       stateRef.current.selectedImageIndex = -1
+      stateRef.current.dragHandle = null
+      stateRef.current.panning = true
+      canvas.style.cursor = 'grabbing'
+      return
     }
   }
 
