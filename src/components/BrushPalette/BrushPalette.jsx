@@ -61,45 +61,58 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   return (
     <div className={styles.palette} role="toolbar" aria-label="Brush tools">
       <button
-        className={styles.paletteBtn}
-        onClick={onUndo}
-        title="Undo (Ctrl/Cmd+Z)"
-        aria-label="Undo"
-      >↩︎</button>
-      <button
-        className={styles.paletteBtn}
-        onClick={onRedo}
-        title="Redo (Ctrl/Cmd+Shift+Z)"
-        aria-label="Redo"
-      >↪︎</button>
+        className={`${styles.paletteBtn} ${tool.kind === 'select' ? styles.activeBtn : ''}`}
+        onClick={() => onChange(prev => ({ ...prev, kind: 'select' }))}
+        aria-label="Select and move"
+        title="Select and move"
+      >🖐️</button>
 
       <button
-        ref={colorBtnRef}
-        className={styles.paletteBtn}
-        onClick={toggleColor}
-        aria-haspopup="menu"
-        aria-expanded={showColor}
-        aria-controls={colorId}
-        title="Colors"
-      >🌈</button>
-      <button
         ref={styleBtnRef}
-        className={styles.paletteBtn}
+        className={`${styles.paletteBtn} ${['pen', 'marker', 'highlighter', 'eraser'].includes(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleStyle}
         aria-haspopup="menu"
         aria-expanded={showStyle}
         aria-controls={styleId}
-        title="Brush style"
+        aria-label="Choose pen style"
+        title="Choose pen style"
+      >✏️</button>
+
+      <button
+        ref={colorBtnRef}
+        className={`${styles.paletteBtn} ${tool.color ? styles.activeBtn : ''}`}
+        onClick={toggleColor}
+        aria-haspopup="menu"
+        aria-expanded={showColor}
+        aria-controls={colorId}
+        aria-label="Choose color"
+        title="Choose color"
       >🎨</button>
+
       <button
         ref={sizeBtnRef}
-        className={styles.paletteBtn}
+        className={`${styles.paletteBtn} ${['pen', 'marker', 'highlighter', 'eraser'].includes(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleSize}
         aria-haspopup="menu"
         aria-expanded={showSize}
         aria-controls={sizeId}
-        title="Pen width"
-      >↕️</button>
+        aria-label="Choose width"
+        title="Choose width"
+      >📏</button>
+
+      <button
+        className={`${styles.paletteBtn} ${styles.historyBtn}`}
+        onClick={onUndo}
+        aria-label="Undo"
+        title="Undo"
+      >↩︎</button>
+      
+      <button
+        className={`${styles.paletteBtn} ${styles.historyBtn}`}
+        onClick={onRedo}
+        aria-label="Redo"
+        title="Redo"
+      >↪︎</button>
 
       {showStyle && createPortal(
         <div
