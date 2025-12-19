@@ -1,70 +1,179 @@
-# Getting Started with Create React App
+<div align="center">
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+<h1 align="center"> 🎨 Web Whiteboard </h1>
 
-## Available Scripts
+An intuitive, zero-setup online drawing canvas. No login required. Just draw.
 
-In the project directory, you can run:
+![GitHub stars](https://img.shields.io/github/stars/bhaumikmaan/web-whiteboard?style=social)
+![GitHub forks](https://img.shields.io/github/forks/bhaumikmaan/web-whiteboard?style=social)
+![GitHub issues](https://img.shields.io/github/issues/bhaumikmaan/web-whiteboard)
+![GitHub PRs](https://img.shields.io/github/issues-pr/bhaumikmaan/web-whiteboard)
+![GitHub PRs](https://img.shields.io/github/contributors/bhaumikmaan/web-whiteboard)
+![GitHub PRs](https://img.shields.io/website?url=https%3A%2F%2Fdraw-space.vercel.app%2F)
+![GitHub license](https://img.shields.io/github/license/bhaumikmaan/web-whiteboard)
 
-### `npm start`
+**🎨 Live Demo:** [Link](https://draw-space.vercel.app)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+</div>
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+**Web Whiteboard** is a lightweight, browser-based drawing application that brings the simplicity of a physical whiteboard to your browser. Start drawing instantly without any authentication, just open the page and create.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## ✨ Features
 
-### `npm run build`
+* **⚡ Instant Access:** No login or signup required.
+* **🎨 Intuitive Drawing Tools:** Pen, eraser, and shape tools with customizable colors and sizes
+* **♾️ Infinite Canvas:** Unlimited drawing space with smooth scrolling and panning
+* **🖼️ Multiple Color Options:** Rich color palette for your creative needs
+* **🎯 Responsive Design:** Works seamlessly across desktop, tablet, and mobile devices
+* **🌐 Browser-Based:** No installation required—works in any modern web browser
+* **⚙️ Lightweight:** Minimal dependencies for fast loading and performance
+* **🌓 Modern UI:** Clean interface focused on the canvas.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🛠️ Tech Stack
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* **Frontend:** [React](https://reactjs.org/)
+* **Build Tool:** [Vite](https://vitejs.dev/)
+* **Language:** JavaScript
+* **Styling:** CSS
 
-### `npm run eject`
+--- 
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## ⚙️ Installation and Setup
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Follow these steps to run the project locally on your machine.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Prerequisites
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+* [Node.js](https://nodejs.org/) (Version 16 or higher recommended)
+* [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-## Learn More
+### Steps
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/bhaumikmaan/web-whiteboard.git
+    cd web-whiteboard
+    ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+2.  **Install dependencies**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
 
-### Code Splitting
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    ```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+4.  **Open in Browser**
+    Visit the URL shown in your terminal (usually `http://localhost:5173`) to view the app.
 
-### Analyzing the Bundle Size
+### Building for Production
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+To create an optimized production build:
 
-### Making a Progressive Web App
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Running Tests
 
-### Advanced Configuration
+```bash
+npm test
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Code Style & Linting
 
-### Deployment
+```bash
+npm run lint
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+To fix linting issues automatically:
 
-### `npm run build` fails to minify
+```bash
+npm run lint:fix
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Quick Keys
+* **Keyboard Shortcuts** — Use quick keys for faster workflow:
+  - `cmd + L` — Clear canvas
+  - `cmd + Z` — Undo last action
+  - `cmd + Y` — Redo last action
+  - `cmd + P` — Select pen tool
+  - `cmd + E` — Select eraser tool
+
+--- 
+
+## 🤝 Contribution and Issue
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
+
+### How to Contribute
+
+1. Fork the project. 
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`). 
+   3. Use descriptive branch names like `feature/collaboration-mode` or `fix/canvas-zoom`
+4. Make Your Changes 
+   5. Write clean, readable code 
+   6. Follow the existing code style and conventions 
+   7. Add comments for complex logic 
+   8. Test your changes thoroughly
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`). Use meaningful commit messages following the conventional commits format:
+   4. `feat:` for new features
+   5. `fix:` for bug fixes
+   6. `docs:` for documentation
+   7. `style:` for code style changes
+   8. `refactor:` for code refactoring
+   9. `test:` for test additions
+4. Push to the Branch (git push origin feature/AmazingFeature). 
+5. Open a Pull Request.
+
+### Development Best Practices
+
+- Keep commits small and focused
+- Write descriptive pull request titles and descriptions
+- Ensure all tests pass before submitting
+- Follow the existing code style
+- Update documentation for new features
+- Test on multiple browsers if possible
+
+### Reporting Issues
+1. Found a bug or have a feature request? Please open an issue on the Issues Page. 
+2. Search existing issues to avoid duplicates. 
+3. Describe the issue clearly, gather relevant information (browser, OS, steps to reproduce)
+4. **Provide Details:**
+   5. **Description:** What did you expect vs. what actually happened?
+   6. **Steps to Reproduce:** Detailed steps to recreate the issue
+   7. **Environment:** Browser type, OS, screen size
+   8. **Screenshots:** Visual evidence if applicable
+   9. **Additional Context:** Any other relevant information
+
+### Issue Labels
+
+- `bug` — Something isn't working correctly
+- `feature` — New feature request
+- `enhancement` — Improvement to existing functionality
+- `documentation` — Documentation updates needed
+- `good first issue` — Great for newcomers
+- `help wanted` — Extra attention needed
+
+---
+## ⭐ Show Your Support
+
+If you find Web Whiteboard useful, please:
+- ⭐ **Star this repository** on GitHub
+- 🍴 **Share with friends** who might benefit
+- 🐛 **Report issues** to help improve the project
+- 💡 **Contribute** your ideas and improvements
+---
+
+<div align="center"> 
+<b> Made with ❤️ by <a href="https://github.com/bhaumikmaan">Bhaumik Maan</a> </b> 
+</div>
