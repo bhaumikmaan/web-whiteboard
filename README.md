@@ -6,11 +6,13 @@ An intuitive, zero-setup online drawing canvas. No login required. Just draw.
 
 ![GitHub stars](https://img.shields.io/github/stars/bhaumikmaan/web-whiteboard?style=social)
 ![GitHub forks](https://img.shields.io/github/forks/bhaumikmaan/web-whiteboard?style=social)
-![GitHub issues](https://img.shields.io/github/issues/bhaumikmaan/web-whiteboard)
-![GitHub PRs](https://img.shields.io/github/issues-pr/bhaumikmaan/web-whiteboard)
-![GitHub PRs](https://img.shields.io/github/contributors/bhaumikmaan/web-whiteboard)
-![GitHub PRs](https://img.shields.io/website?url=https%3A%2F%2Fdraw-space.vercel.app%2F)
-![GitHub license](https://img.shields.io/github/license/bhaumikmaan/web-whiteboard)
+<br><br>
+![GitHub issues](https://img.shields.io/github/issues/bhaumikmaan/web-whiteboard?style=for-the-badge)
+![GitHub PRs](https://img.shields.io/github/issues-pr/bhaumikmaan/web-whiteboard?style=for-the-badge)
+![GitHub PRs](https://img.shields.io/github/contributors/bhaumikmaan/web-whiteboard?style=for-the-badge)
+<br><br>
+![GitHub PRs](https://img.shields.io/website?url=https%3A%2F%2Fdraw-space.vercel.app&style=for-the-badge)
+![GitHub license](https://img.shields.io/github/license/bhaumikmaan/web-whiteboard?style=for-the-badge)
 
 **🎨 Live Demo:** [Link](https://draw-space.vercel.app)
 
@@ -68,9 +70,9 @@ Follow these steps to run the project locally on your machine.
 
 3.  **Run the development server**
     ```bash
-    npm run dev
+    npm start
     # or
-    yarn dev
+    yarn start
     ```
 
 4.  **Open in Browser**
@@ -115,54 +117,7 @@ npm run lint:fix
 ## 🤝 Contribution and Issue
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are greatly appreciated.
 
-### How to Contribute
-
-1. Fork the project. 
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`). 
-   3. Use descriptive branch names like `feature/collaboration-mode` or `fix/canvas-zoom`
-4. Make Your Changes 
-   5. Write clean, readable code 
-   6. Follow the existing code style and conventions 
-   7. Add comments for complex logic 
-   8. Test your changes thoroughly
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`). Use meaningful commit messages following the conventional commits format:
-   4. `feat:` for new features
-   5. `fix:` for bug fixes
-   6. `docs:` for documentation
-   7. `style:` for code style changes
-   8. `refactor:` for code refactoring
-   9. `test:` for test additions
-4. Push to the Branch (git push origin feature/AmazingFeature). 
-5. Open a Pull Request.
-
-### Development Best Practices
-
-- Keep commits small and focused
-- Write descriptive pull request titles and descriptions
-- Ensure all tests pass before submitting
-- Follow the existing code style
-- Update documentation for new features
-- Test on multiple browsers if possible
-
-### Reporting Issues
-1. Found a bug or have a feature request? Please open an issue on the Issues Page. 
-2. Search existing issues to avoid duplicates. 
-3. Describe the issue clearly, gather relevant information (browser, OS, steps to reproduce)
-4. **Provide Details:**
-   5. **Description:** What did you expect vs. what actually happened?
-   6. **Steps to Reproduce:** Detailed steps to recreate the issue
-   7. **Environment:** Browser type, OS, screen size
-   8. **Screenshots:** Visual evidence if applicable
-   9. **Additional Context:** Any other relevant information
-
-### Issue Labels
-
-- `bug` — Something isn't working correctly
-- `feature` — New feature request
-- `enhancement` — Improvement to existing functionality
-- `documentation` — Documentation updates needed
-- `good first issue` — Great for newcomers
-- `help wanted` — Extra attention needed
+Please read our [CONTRIBUTING.md](https://github.com/bhaumikmaan/web-whiteboard/blob/main/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
 
 ---
 ## ⭐ Show Your Support
