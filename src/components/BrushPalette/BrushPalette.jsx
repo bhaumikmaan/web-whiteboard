@@ -176,6 +176,21 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
           style={{ top: colorPos.top, left: colorPos.left }}
           aria-label="Pen colors"
         >
+          <button
+            role="menuitemradio"
+            aria-checked={tool.color == null}
+            className={`${styles.paletteItem} ${styles.color} ${tool.color == null ? styles.active : ''}`}
+            onClick={() => setColor(undefined)}
+            title="Default"
+          >
+            <span
+              className={styles.swatchDot}
+              style={{ background: theme === 'dark' ? '#ffffff' : '#000000' }}
+              aria-hidden="true"
+            />
+            Default
+          </button>
+          
           {[
             { name: 'Blue', css: 'blue' },
             { name: 'Red', css: 'red' },
