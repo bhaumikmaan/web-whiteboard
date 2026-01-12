@@ -1,15 +1,3 @@
-:root {
-  /* Opt in to both schemes so UAs can render built-ins appropriately */
-  color-scheme: light dark;
-}
-html, body, #root, .App {
-  height: 100%;
-}
-body {
-  margin: 0;
-  overscroll-behavior: none; /* reduce scroll chaining while drawing */
-  overflow: hidden; 
-}
 .App {
   position: relative;
   width: 100%;
@@ -17,294 +5,31 @@ body {
   background: var(--bg);
   color: var(--text);
 }
-.board {
-  width: 100%;
-  height: 100%;
-  display: block;            /* remove inline-gap */
-  touch-action: none;        /* let Pointer Events handle pan/zoom/draw */
-  cursor: crosshair;
-  user-select: none;
-}
-.hud {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  pointer-events: none;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  font-size: 12px;
-}
-.panel {
-  pointer-events: auto;
-  background: var(--panel-bg);
+
+/* Theme Toggle Button (Desktop) */
+.theme-toggle {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: var(--z-toggle);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
   color: var(--text);
-  border-radius: 8px;
-  padding: 8px 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font: var(--font-weight-medium) var(--font-size-sm) var(--font-sans);
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  display: none; /* Hidden by default, shown on desktop */
 }
 
-/* Mid-left brush palette */
-.palette {
-  position: fixed;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 16;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  backdrop-filter: blur(6px);
-}
-.palette-btn {
-  width: 36px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  font-size: 18px;
-}
-.palette-btn.active {
-  background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%);
-}
-.palette-btn:hover {
+.theme-toggle:hover {
   opacity: 0.9;
 }
 
-/* Vertical pop-out panel anchored next to toolbar (top/left set inline) */
-.palette-pop {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 8px);
-  transform: translateY(-50%); 
-  z-index: 101;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-}
-.palette-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text);
-  cursor: pointer;
-  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
-.palette-item .swatch { display: inline-block; background: currentColor; border-radius: 999px; }
-.palette-item.active { background: color-mix(in oklab, var(--panel-bg) 70%, var(--text) 10%); }
-
-/* Color swatch items */
-.palette-item.color { min-width: 140px; }
-.swatch-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid var(--panel-border);
-  box-shadow: 0 0 0 2px rgba(0,0,0,0.06) inset;
-}
-
-/* Theme variables on :root so portals inherit them */
-:root[data-theme="light"] {
-  --bg: #ffffff;
-  --text: #111111;
-  --panel-bg: rgba(255,255,255,0.9);
-  --panel-border: #dddddd;
-}
-:root[data-theme="dark"] {
-  --bg: #0f1115;
-  --text: #f1f3f5;
-  --panel-bg: rgba(20,22,26,0.9);
-  --panel-border: #333333;
-}
-
-/* Floating action button to open toaster */
-.toaster-toggle {
-  position: fixed;
-  right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 20;
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  font: 600 18px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-.toaster-toggle:hover {
-  opacity: 0.95;
-}
-
-/* Bottom‑center credit badge */
-.made-with {
-  position: fixed;                    /* fix to viewport bottom center */ 
-  left: 50%;                          /* center horizontally */
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px)); /* avoid notches/home bar */
-  transform: translateX(-50%);        /* exact centering */
-  z-index: 21;                        /* above canvas/HUD */
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-  color: var(--text);
-  font: 500 clamp(10px, 2.8vw, 12px) ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  text-decoration: none;
-  backdrop-filter: blur(6px);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;                /* keep on one line */
-  line-height: 1;                     /* reduce vertical spread */
-  box-sizing: border-box;
-  max-width: calc(100vw - 24px);      /* prevent overflow on very narrow screens */
-  overflow: hidden;
-  text-overflow: ellipsis;            /* clip gracefully if absolutely necessary */
-}
-.made-with .heart {
-  color: #e03131;                     /* subtle accent for the heart */
-  flex-shrink: 0;                     /* avoid squashing the icon */
-}
-.made-with:hover {
-  opacity: 0.95;
-}
-
-/* Toaster panel */
-.toaster {
-  position: fixed;
-  right: calc(12px + env(safe-area-inset-right, 0px));
-  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-  z-index: 19;
-  transform: translateY(12px);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 160ms ease, opacity 160ms ease;
-}
-.toaster.open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.toaster-content {
-  min-width: 280px;
-  max-width: 90vw;
-  background: var(--panel-bg);
-  color: var(--text);
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-  backdrop-filter: blur(6px);
-}
-
-.toaster-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.toaster-title {
-  font: 600 13px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
-
-.chip {
-  border: 1px solid var(--panel-border);
-  background: transparent;
-  color: var(--text);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  cursor: pointer;
-}
-
-.toaster-help {
-  font-size: 12px;
-  opacity: 0.85;
-}
-
-/* Mobile = primary input cannot hover and is coarse (touch) */
-@media (hover: none) and (pointer: coarse) {
-  .hud {
-    display: none;
-  }
-  .palette {
-    left: 10px;
-    padding: 6px;
-    gap: 6px;
-  }
-  .palette-pop { gap: 4px; padding: 6px; }
-  .theme-toggle {
-    display: none;
-  }
-  .toaster-toggle {
-    display: inline-flex;
-  }
-  .toaster {
-    display: block;
-  }
-  .toaster-content {
-    min-width: 0;
-    max-width: min(94vw, 520px);
-  }
-
-  /* Slightly tighter spacing on phones */
-  .made-with {
-    padding: 5px 8px;
-    gap: 4px;
-    font-size: clamp(10px, 3.6vw, 12px);
-  }
-}
-
-
-/* Desktop = hoverable, fine pointer (mouse/trackpad) */
+/* Responsive: Desktop (hoverable, fine pointer) */
 @media (hover: hover) and (pointer: fine) {
   .theme-toggle {
-    position: fixed;
-    right: 12px;
-    bottom: 12px;
-    z-index: 10;
-    padding: 8px 10px;
-    border-radius: 8px;
-    border: 1px solid var(--panel-border);
-    background: var(--panel-bg);
-    color: var(--text);
-    font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    cursor: pointer;
-    backdrop-filter: blur(6px);
     display: inline-flex;
-  }
-  .theme-toggle:hover {
-    opacity: 0.9;
-  }
-  .toaster-toggle,
-  .toaster {
-    display: none;
   }
 }

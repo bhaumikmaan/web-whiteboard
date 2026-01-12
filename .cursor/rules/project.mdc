@@ -1,0 +1,178 @@
+---
+description: Project conventions and coding standards for web-whiteboard
+globs: ["**/*.{js,jsx,ts,tsx,css}"]
+alwaysApply: true
+---
+
+# Web Whiteboard - Project Rules
+
+## Project Overview
+
+A lightweight, infinite canvas whiteboard app built with React 19 and Vite. Features include:
+- Infinite pan/zoom canvas with grid
+- Multiple brush tools: pen, marker, highlighter, eraser
+- Touch support with pinch-to-zoom
+- Image paste/drop support
+- Light/dark theme (follows system preference)
+- Keyboard shortcuts (Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo)
+
+## Tech Stack
+
+- **Framework**: React 19.1+ with Vite 7
+- **Language**: JavaScript (JSX) - no TypeScript in components
+- **Styling**: CSS Modules for components, global CSS variables in `src/styles/`
+- **Testing**: Vitest + React Testing Library
+- **Linting**: ESLint
+
+## File Structure
+
+```
+src/
+├── styles/           # Global styles (variables, reset, typography, utilities)
+├── hooks/            # Custom React hooks (Phase 2 refactoring)
+├── utils/            # Pure utility functions (Phase 3 refactoring)
+├── constants/        # Static data (colors, tools, sizes)
+├── components/       # React components (each in own folder)
+│   └── ComponentName/
+│       ├── ComponentName.jsx
+│       ├── ComponentName.module.css
+│       └── index.js
+├── App.jsx
+├── App.css
+└── index.jsx
+```
+
+## CSS Conventions
+
+### Global Variables (src/styles/variables.css)
+
+Always use CSS custom properties for consistency:
+
+```css
+/* Spacing */
+var(--spacing-xs)   /* 4px */
+var(--spacing-sm)   /* 6px */
+var(--spacing-md)   /* 8px */
+var(--spacing-lg)   /* 10px */
+var(--spacing-xl)   /* 12px */
+
+/* Border Radius */
+var(--radius-sm)    /* 8px */
+var(--radius-md)    /* 10px */
+var(--radius-pill)  /* 999px */
+
+/* Z-Index Scale */
+var(--z-canvas)     /* 1 */
+var(--z-palette)    /* 16 */
+var(--z-toaster)    /* 19 */
+var(--z-toggle)     /* 20 */
+var(--z-badge)      /* 21 */
+var(--z-popover)    /* 100 */
+
+/* Theme Colors */
+var(--bg)           /* Background */
+var(--text)         /* Text color */
+var(--panel-bg)     /* Panel background */
+var(--panel-border) /* Panel border */
+var(--accent)       /* Accent color */
+```
+
+### CSS Module Naming
+
+- Use camelCase for class names: `.paletteBtn`, `.toasterContent`
+- Keep selectors flat, avoid deep nesting
+- Mobile-first approach with `@media (hover: hover) and (pointer: fine)` for desktop
+
+### Minimal Comments
+
+- Avoid excessive comment headers in CSS
+- Only add comments for non-obvious code
+- No section dividers like `/* ========== */`
+
+## React Conventions
+
+### Component Structure
+
+```jsx
+import React from 'react'
+import styles from './ComponentName.module.css'
+
+export default function ComponentName({ prop1, prop2 }) {
+  // hooks first
+  const [state, setState] = React.useState(initial)
+  
+  // derived values
+  const computed = React.useMemo(() => ..., [deps])
+  
+  // callbacks
+  const handleClick = React.useCallback(() => ..., [deps])
+  
+  // effects last
+  React.useEffect(() => ..., [deps])
+  
+  return (
+    <div className={styles.container}>
+      ...
+    </div>
+  )
+}
+```
+
+### Hooks Usage
+
+- Prefer `React.useState`, `React.useEffect` over destructured imports
+- Use refs for mutable values that don't trigger re-renders
+- Extract complex logic into custom hooks in `src/hooks/`
+
+### Barrel Exports
+
+Each component folder has an `index.js`:
+
+```js
+export { default } from './ComponentName.jsx'
+```
+
+## Canvas/Drawing Specific
+
+### Coordinate Systems
+
+- **Screen space**: Pixel coordinates from mouse/touch events
+- **World space**: Infinite canvas coordinates (after pan/zoom transform)
+- Use `screenToWorld(sx, sy)` to convert between them
+
+### Stroke Data Structure
+
+```js
+{
+  mode: 'theme' | 'custom' | 'image',
+  points: [{ x, y, p }],  // p = pressure
+  size: number,
+  color: string | undefined,
+  alpha: number,
+  erase: boolean,
+  cap: 'round',
+  join: 'round'
+}
+```
+
+### View State
+
+```js
+{
+  panX: number,   // horizontal offset
+  panY: number,   // vertical offset  
+  scale: number   // zoom level (0.05 to 20)
+}
+```
+
+## Testing
+
+- Test files: `*.test.jsx` alongside components
+- Run tests: `npm test`
+- Focus on user interactions, not implementation details
+
+## Git Workflow
+
+- Keep commits focused and atomic
+- Run `npm run lint` before committing
+- Run `npm run typecheck` to verify types

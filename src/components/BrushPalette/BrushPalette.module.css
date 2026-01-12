@@ -3,12 +3,12 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 16;
+  z-index: var(--z-palette, 16);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  border-radius: 10px;
+  gap: var(--spacing-md, 8px);
+  padding: var(--spacing-md, 8px);
+  border-radius: var(--radius-md, 10px);
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   backdrop-filter: blur(6px);
@@ -20,22 +20,22 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-sm, 8px);
   border: 1px solid var(--panel-border);
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  font-size: 18px;
+  font-size: var(--font-size-lg, 18px);
 }
 
 .activeBtn {
-  background: var(--panel-accent-bg, rgba(0, 120, 255, 0.12));
-  border-color: var(--panel-accent-border, rgba(0, 120, 255, 0.6));
+  background: color-mix(in oklab, var(--accent, #3b82f6) 15%, transparent);
+  border-color: var(--accent, #3b82f6);
 }
 
 .group {
   display: inline-flex;
-  gap: 4px;
+  gap: var(--spacing-xs, 4px);
 }
 
 .historyBtn {
@@ -47,7 +47,6 @@
   pointer-events: none;
 }
 
-
 .paletteBtn[disabled] {
   opacity: 0.5;
   pointer-events: none;
@@ -57,44 +56,37 @@
   opacity: 0.9;
 }
 
-.active {
-  background: color-mix(in oklab, var(--panel-bg) 40%, var(--accent, #3b82f6) 60%);
-  border-color: var(--accent, #3b82f6);
-  color: #fff;
-}
-
 .palettePop {
   position: fixed;
-  /* anchored via inline top/left from getBoundingClientRect */
-  z-index: 100;
+  z-index: var(--z-popover, 100);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
+  gap: var(--spacing-sm, 6px);
+  padding: var(--spacing-md, 8px);
+  border-radius: var(--radius-md, 10px);
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   color: var(--text);
   backdrop-filter: blur(6px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-md, 0 6px 24px rgba(0, 0, 0, 0.12));
 }
 
 .paletteItem {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: 8px;
+  gap: var(--spacing-md, 8px);
+  padding: var(--spacing-sm, 6px) var(--spacing-md, 8px);
+  border-radius: var(--radius-sm, 8px);
   border: 1px solid var(--panel-border);
   background: transparent;
   color: var(--text);
   cursor: pointer;
-  font: 500 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font: var(--font-weight-medium, 500) var(--font-size-sm, 12px) var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
 .paletteItem.active {
-  background: color-mix(in oklab, var(--panel-bg) 30%, #2563eb 70%);
-  border-color: #2563eb;
+  background: color-mix(in oklab, var(--panel-bg) 30%, var(--accent-hover, #2563eb) 70%);
+  border-color: var(--accent-hover, #2563eb);
   color: #ffffff;
 }
 
@@ -105,7 +97,7 @@
 .swatch {
   display: inline-block;
   background: currentColor;
-  border-radius: 999px;
+  border-radius: var(--radius-pill, 999px);
 }
 
 .color {
@@ -131,12 +123,12 @@
 @media (hover: none) and (pointer: coarse) {
   .palette {
     left: 10px;
-    padding: 6px;
-    gap: 6px;
+    padding: var(--spacing-sm, 6px);
+    gap: var(--spacing-sm, 6px);
   }
 
   .palettePop {
-    gap: 4px;
-    padding: 6px;
+    gap: var(--spacing-xs, 4px);
+    padding: var(--spacing-sm, 6px);
   }
 }
