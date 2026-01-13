@@ -3,20 +3,20 @@
   left: 50%;
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  z-index: 21;
-  padding: 6px 10px;
-  border-radius: 999px;
+  z-index: var(--z-badge, 21);
+  padding: var(--spacing-sm, 6px) var(--spacing-lg, 10px);
+  border-radius: var(--radius-pill, 999px);
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   color: var(--text);
-  font: 500 clamp(10px, 2.8vw, 12px) ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font: var(--font-weight-medium, 500) clamp(10px, 2.8vw, 12px) var(--font-sans, ui-sans-serif, system-ui, sans-serif);
   text-decoration: none;
   backdrop-filter: blur(6px);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--spacing-sm, 6px);
   white-space: nowrap;
-  line-height: 1;
+  line-height: var(--line-height-tight, 1);
   box-sizing: border-box;
   max-width: calc(100vw - 24px);
   overflow: hidden;
@@ -34,8 +34,8 @@
 
 @media (hover: none) and (pointer: coarse) {
   .madeWith {
-    padding: 5px 8px;
-    gap: 4px;
+    padding: 5px var(--spacing-md, 8px);
+    gap: var(--spacing-xs, 4px);
     font-size: clamp(10px, 3.6vw, 12px);
   }
 }

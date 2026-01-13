@@ -1,0 +1,58 @@
+:root {
+  /* Opt in to both schemes so UAs can render built-ins appropriately */
+  color-scheme: light dark;
+
+  /* Spacing Scale */
+  --spacing-xs: 4px;
+  --spacing-sm: 6px;
+  --spacing-md: 8px;
+  --spacing-lg: 10px;
+  --spacing-xl: 12px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 24px rgba(0, 0, 0, 0.12);
+
+  /* Z-Index Scale */
+  --z-canvas: 1;
+  --z-hud: 10;
+  --z-palette: 16;
+  --z-toaster: 19;
+  --z-toggle: 20;
+  --z-badge: 21;
+  --z-popover: 100;
+
+  /* Transitions */
+  --transition-fast: 160ms ease;
+
+  /* Accent Color (for active states) */
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+}
+
+/* Light Theme */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --text: #111111;
+  --panel-bg: rgba(255, 255, 255, 0.9);
+  --panel-border: #dddddd;
+  --grid-color: #e6e6e6;
+  --stroke-color: #222222;
+}
+
+/* Dark Theme */
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --text: #f1f3f5;
+  --panel-bg: rgba(20, 22, 26, 0.9);
+  --panel-border: #333333;
+  --grid-color: #2a2f3a;
+  --stroke-color: #e6e6e6;
+}
+

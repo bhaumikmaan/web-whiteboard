@@ -1,0 +1,186 @@
+---
+description: Canvas rendering and interaction architecture
+globs: ["**/Canvas*.{js,jsx}", "**/use*.js"]
+alwaysApply: false
+---
+
+# Canvas Architecture
+
+## Overview
+
+The whiteboard uses HTML5 Canvas with a custom rendering loop. No external canvas libraries.
+
+## Rendering Pipeline
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    requestAnimationFrame                 │
+│                         draw()                           │
+├─────────────────────────────────────────────────────────┤
+│  1. Clear canvas                                         │
+│  2. Apply view transform (pan + scale)                   │
+│  3. Draw strokes (in world space)                        │
+│  4. Draw image selections if any                         │
+│  5. Draw grid (destination-over composite)               │
+│  6. Fill background                                      │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Coordinate Transformation
+
+```
+Screen Space (pixels)          World Space (infinite canvas)
+     ┌────────┐                      ┌────────────────┐
+     │ (0,0)  │                      │    (-∞, -∞)    │
+     │   ↓    │   screenToWorld()    │                │
+     │ click  │  ─────────────────►  │   (wx, wy)     │
+     │(sx,sy) │                      │                │
+     └────────┘                      └────────────────┘
+
+wx = (sx - panX) / scale
+wy = (sy - panY) / scale
+```
+
+## View State
+
+```js
+viewRef = {
+  panX: 0,    // Horizontal pan offset (screen pixels)
+  panY: 0,    // Vertical pan offset (screen pixels)
+  scale: 1    // Zoom level (0.05 min, 20 max)
+}
+```
+
+### Pan Controls
+- **Desktop**: Hold Space + drag, or middle mouse drag
+- **Touch**: 2-finger drag (during pinch)
+- **Wheel**: Trackpad scroll (without Ctrl/Alt)
+
+### Zoom Controls
+- **Desktop**: Ctrl+wheel, Alt+wheel, or mouse wheel
+- **Touch**: 2-finger pinch
+- **Reset**: Double-click/double-tap
+
+## Stroke System
+
+### Stroke Types
+
+```js
+// Drawing stroke
+{
+  mode: 'theme' | 'custom',
+  points: [{ x, y, p }],
+  size: number,
+  color: string | undefined,
+  alpha: 1 | 0.28,      // 0.28 for highlighter
+  erase: boolean,
+  cap: 'round',
+  join: 'round'
+}
+
+// Image stroke
+{
+  mode: 'image',
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  points: []
+}
+```
+
+### Stroke Rendering
+
+- `mode: 'theme'` → Uses `themeColors.stroke` (adapts to light/dark)
+- `mode: 'custom'` → Uses specified `color`
+- `erase: true` → Uses `destination-out` composite operation
+- `alpha < 1` → Highlighter effect
+
+## Pointer Event Handling
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    onPointerDown                         │
+├─────────────────────────────────────────────────────────┤
+│  Check: Space held? Middle button? → Start PANNING      │
+│  Check: Select tool? → Check for image/handle hit       │
+│  Else: Start DRAWING (create new stroke)                │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    onPointerMove                         │
+├─────────────────────────────────────────────────────────┤
+│  If PANNING: Update panX/panY                           │
+│  If DRAWING: Add point to current stroke                │
+│  If DRAGGING IMAGE: Update image position/size          │
+│  If PINCHING: Update scale + pan (2-finger)             │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    onPointerUp                           │
+├─────────────────────────────────────────────────────────┤
+│  Reset drawing/panning state                            │
+│  Release pointer capture                                │
+│  Restore cursor                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Touch Gesture System
+
+### Touch Cache
+```js
+touchCache = new Map()  // pointerId → { x, y }
+```
+
+### Pinch Detection
+```js
+pinch = {
+  id1, id2,           // Two finger pointer IDs
+  startDist,          // Initial distance between fingers
+  startScale,         // Scale when pinch started
+  startPanX, startPanY,
+  originX, originY    // Pinch center point
+}
+```
+
+### Double-Tap Detection
+```js
+lastTap = { t: timestamp, x, y }
+// If tap within 300ms and 30px of last tap → reset view
+```
+
+## Image Handling
+
+### Paste Flow
+```
+Clipboard → navigator.clipboard.read() → Blob → Image → Stroke
+         └─ clipboardData.files fallback ─┘
+```
+
+### Drag & Drop Flow
+```
+dragover (preventDefault) → drop → files → Image → Stroke
+```
+
+### Image Sizing
+- Fit to 60% of viewport
+- Maintain aspect ratio
+- Center in current view
+
+### Image Selection
+- Select tool enables image interaction
+- Click image → select (show handles)
+- Drag image → move
+- Drag corner handle → resize
+- Click empty → deselect
+
+## Performance Considerations
+
+1. **RAF Loop**: Continuous `requestAnimationFrame` for smooth rendering
+2. **No React State for Drawing**: Use refs to avoid re-renders during draw
+3. **Efficient Grid**: Only draw visible grid lines
+4. **Pointer Capture**: Prevents event loss during fast drawing
+5. **DPR Handling**: Canvas scaled for retina displays
