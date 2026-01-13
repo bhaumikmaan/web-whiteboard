@@ -2,6 +2,7 @@
   "name": "web-whiteboard",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "overrides": {
     "glob": "^11.1.0",
     "js-yaml": "^4.1.1"

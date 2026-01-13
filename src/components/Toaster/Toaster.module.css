@@ -9,7 +9,8 @@
   border: 1px solid var(--panel-border);
   background: var(--panel-bg);
   color: var(--text);
-  font: var(--font-weight-bold, 700) var(--font-size-lg, 18px) / 1 var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font: var(--font-weight-bold, 700) var(--font-size-lg, 18px) / 1
+    var(--font-sans, ui-sans-serif, system-ui, sans-serif);
   cursor: pointer;
   backdrop-filter: blur(6px);
   display: inline-flex;
@@ -30,7 +31,9 @@
   transform: translateY(-12px);
   opacity: 0;
   pointer-events: none;
-  transition: transform var(--transition-fast, 160ms ease), opacity var(--transition-fast, 160ms ease);
+  transition:
+    transform var(--transition-fast, 160ms ease),
+    opacity var(--transition-fast, 160ms ease);
 }
 
 .open {
@@ -60,7 +63,8 @@
 }
 
 .toasterTitle {
-  font: var(--font-weight-semibold, 600) var(--font-size-md, 13px) var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font: var(--font-weight-semibold, 600) var(--font-size-md, 13px)
+    var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
 .chip {

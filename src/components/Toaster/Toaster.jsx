@@ -1,8 +1,8 @@
-import React from 'react'
-import styles from './Toaster.module.css'
+import React from 'react';
+import styles from './Toaster.module.css';
 
 export default function Toaster({ theme, onToggleTheme }) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
   return (
     <>
       <button
@@ -15,18 +15,11 @@ export default function Toaster({ theme, onToggleTheme }) {
       >
         ?
       </button>
-      <div
-        id="wb-toaster"
-        className={`${styles.toaster} ${open ? styles.open : ''}`}
-      >
+      <div id="wb-toaster" className={`${styles.toaster} ${open ? styles.open : ''}`}>
         <div className={styles.toasterContent}>
           <div className={styles.toasterRow}>
             <span className={styles.toasterTitle}>Help</span>
-            <button
-              className={styles.chip}
-              onClick={onToggleTheme}
-              aria-label="Toggle color scheme"
-            >
+            <button className={styles.chip} onClick={onToggleTheme} aria-label="Toggle color scheme">
               {theme === 'dark' ? '☀️ Light mode' : '🌙 Dark mode'}
             </button>
           </div>
@@ -40,5 +33,5 @@ export default function Toaster({ theme, onToggleTheme }) {
         </div>
       </div>
     </>
-  )
+  );
 }

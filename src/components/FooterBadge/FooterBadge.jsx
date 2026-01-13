@@ -1,5 +1,4 @@
-import React from 'react'
-import styles from './FooterBadge.module.css'
+import styles from './FooterBadge.module.css';
 
 export default function FooterBadge() {
   return (
@@ -11,7 +10,11 @@ export default function FooterBadge() {
       aria-label="Made with love by bhaumikmaan"
       title="Made with ♥ by bhaumikmaan"
     >
-      Made with <span className={styles.heart} aria-hidden="true">❤</span> by bhaumikmaan
+      Made with{' '}
+      <span className={styles.heart} aria-hidden="true">
+        ❤
+      </span>{' '}
+      by bhaumikmaan
     </a>
-  )
+  );
 }

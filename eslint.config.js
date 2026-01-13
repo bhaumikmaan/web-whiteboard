@@ -29,5 +29,11 @@ export default [
       globals: { ...globals.browser, ...globals.jest },
     },
   },
+  {
+    files: ['vitest.setup.js', 'vite.config.js', 'eslint.config.js'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
   prettier,
 ];
