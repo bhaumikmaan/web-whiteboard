@@ -21,7 +21,10 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
-    "test:ci": "vitest run"
+    "test:ci": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "eslintConfig": {
     "extends": [
@@ -41,6 +44,10 @@
       "last 1 safari version"
     ]
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,css,json,md}": "prettier --write",
+    "*.{js,jsx,ts,tsx}": "eslint --fix --max-warnings=0"
+  },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.4",
     "@eslint/js": "^9.35.0",
@@ -49,11 +56,14 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^5.0.2",
     "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsdom": "^26.1.0",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "rimraf": "^6.0.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.11",
