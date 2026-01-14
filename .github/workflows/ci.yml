@@ -16,30 +16,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-      
-    - name: Install dependencies
-      run: npm i
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
 
-    - name: Clearing previous builds
-      run: npm run clean
-      
-    - name: Run Linter
-      run: npm run lint
-      continue-on-error: true
+      - name: Install dependencies
+        run: npm i
 
-    - name: Type Check
-      run: npm run typecheck
+      - name: Clearing previous builds
+        run: npm run clean
 
-    - name: Build
-      run: npm run build
+      - name: Check Formatting
+        run: npm run format:check
 
-    - name: Run Tests
-      run: npm test
+      - name: Run Linter
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Type Check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Tests
+        run: npm test

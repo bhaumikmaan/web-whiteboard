@@ -90,7 +90,7 @@
   color: #ffffff;
 }
 
-.paletteItem.active span[aria-hidden="true"] {
+.paletteItem.active span[aria-hidden='true'] {
   filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 }
 

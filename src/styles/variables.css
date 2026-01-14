@@ -37,7 +37,7 @@
 }
 
 /* Light Theme */
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   --bg: #ffffff;
   --text: #111111;
   --panel-bg: rgba(255, 255, 255, 0.9);
@@ -47,7 +47,7 @@
 }
 
 /* Dark Theme */
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --bg: #0f1115;
   --text: #f1f3f5;
   --panel-bg: rgba(20, 22, 26, 0.9);
@@ -55,4 +55,3 @@
   --grid-color: #2a2f3a;
   --stroke-color: #e6e6e6;
 }
-

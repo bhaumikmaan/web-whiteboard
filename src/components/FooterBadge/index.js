@@ -1,1 +1,1 @@
-export { default } from './FooterBadge.jsx'
+export { default } from './FooterBadge.jsx';

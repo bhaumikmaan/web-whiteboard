@@ -1,1 +1,1 @@
-export { default } from './BrushPalette.jsx'
+export { default } from './BrushPalette.jsx';

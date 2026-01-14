@@ -1,1 +1,1 @@
-export { default } from './CanvasWhiteboard.jsx'
+export { default } from './CanvasWhiteboard.jsx';
