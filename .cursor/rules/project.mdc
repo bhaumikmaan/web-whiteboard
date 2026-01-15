@@ -267,6 +267,9 @@ describe('hookName', () => {
 - `src/hooks/useCanvasSetup.test.js` - DPR scaling, resize
 - `src/hooks/useCanvasView.test.js` - pan/zoom, coordinate conversion
 - `src/hooks/useStrokeManager.test.js` - undo/redo history
+- `src/constants/tools.test.js` - tool kinds, stroke size, alpha
+- `src/constants/colors.test.js` - color palette, theme swatches
+- `src/constants/sizes.test.js` - brush sizes, swatch height
 - `src/App.test.jsx` - help panel interaction
 
 ## Git Workflow

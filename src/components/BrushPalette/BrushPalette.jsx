@@ -1,6 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import styles from './BrushPalette.module.css';
+import { TOOL_KINDS, TOOL_OPTIONS, isDrawingTool } from '../../constants/tools';
+import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
+import { BRUSH_SIZES, getSwatchHeight } from '../../constants/sizes';
 
 export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
   const [showSize, setShowSize] = React.useState(false);
@@ -60,8 +63,8 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   return (
     <div className={styles.palette} role="toolbar" aria-label="Brush tools">
       <button
-        className={`${styles.paletteBtn} ${tool.kind === 'select' ? styles.activeBtn : ''}`}
-        onClick={() => onChange((prev) => ({ ...prev, kind: 'select' }))}
+        className={`${styles.paletteBtn} ${tool.kind === TOOL_KINDS.SELECT ? styles.activeBtn : ''}`}
+        onClick={() => onChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }))}
         aria-label="Select and move"
         title="Select and move"
       >
@@ -70,7 +73,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
 
       <button
         ref={styleBtnRef}
-        className={`${styles.paletteBtn} ${['pen', 'marker', 'highlighter', 'eraser'].includes(tool.kind) ? styles.activeBtn : ''}`}
+        className={`${styles.paletteBtn} ${isDrawingTool(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleStyle}
         aria-haspopup="menu"
         aria-expanded={showStyle}
@@ -96,7 +99,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
 
       <button
         ref={sizeBtnRef}
-        className={`${styles.paletteBtn} ${['pen', 'marker', 'highlighter', 'eraser'].includes(tool.kind) ? styles.activeBtn : ''}`}
+        className={`${styles.paletteBtn} ${isDrawingTool(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleSize}
         aria-haspopup="menu"
         aria-expanded={showSize}
@@ -124,12 +127,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
             style={{ top: stylePos.top, left: stylePos.left }}
             aria-label="Brush style menu"
           >
-            {[
-              { key: 'pen', label: 'Pen', icon: '🖊' },
-              { key: 'marker', label: 'Marker', icon: '🖍' },
-              { key: 'highlighter', label: 'Highlighter', icon: '🖌' },
-              { key: 'eraser', label: 'Eraser', icon: '⌫' },
-            ].map((o) => (
+            {TOOL_OPTIONS.map((o) => (
               <button
                 key={o.key}
                 role="menuitemradio"
@@ -157,7 +155,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
             style={{ top: sizePos.top, left: sizePos.left }}
             aria-label="Pen width menu"
           >
-            {[1, 2, 4, 6, 8, 12, 16].map((n) => (
+            {BRUSH_SIZES.map((n) => (
               <button
                 key={n}
                 role="menuitemradio"
@@ -166,7 +164,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
                 onClick={() => setSize(n)}
                 title={`${n}px`}
               >
-                <span className={styles.swatch} style={{ height: Math.max(2, n), width: 28 }} />
+                <span className={styles.swatch} style={{ height: getSwatchHeight(n), width: 28 }} />
                 {n}px
               </button>
             ))}
@@ -192,19 +190,13 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
             >
               <span
                 className={styles.swatchDot}
-                style={{ background: theme === 'dark' ? '#ffffff' : '#000000' }}
+                style={{ background: getDefaultSwatchColor(theme) }}
                 aria-hidden="true"
               />
               Default
             </button>
 
-            {[
-              { name: 'Blue', css: 'blue' },
-              { name: 'Red', css: 'red' },
-              { name: 'Green', css: 'green' },
-              { name: 'Yellow', css: 'yellow' },
-              { name: 'Pink', css: 'pink' },
-            ].map((c) => (
+            {STROKE_COLORS.map((c) => (
               <button
                 key={c.name}
                 role="menuitemradio"
