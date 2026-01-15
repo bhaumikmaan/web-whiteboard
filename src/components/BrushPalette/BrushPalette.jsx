@@ -12,12 +12,37 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   const [stylePos, setStylePos] = React.useState({ top: 0, left: 0 });
   const [sizePos, setSizePos] = React.useState({ top: 0, left: 0 });
   const [colorPos, setColorPos] = React.useState({ top: 0, left: 0 });
+  const [customColor, setCustomColor] = React.useState('#6366f1');
+  const paletteRef = React.useRef(null);
+  const stylePopRef = React.useRef(null);
+  const sizePopRef = React.useRef(null);
+  const colorPopRef = React.useRef(null);
   const styleBtnRef = React.useRef(null);
   const sizeBtnRef = React.useRef(null);
   const colorBtnRef = React.useRef(null);
+  const colorInputRef = React.useRef(null);
   const sizeId = 'menu-sizes';
   const styleId = 'menu-styles';
   const colorId = 'menu-colors';
+
+  // Close menus when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      const isInsidePalette = paletteRef.current?.contains(e.target);
+      const isInsideStylePop = stylePopRef.current?.contains(e.target);
+      const isInsideSizePop = sizePopRef.current?.contains(e.target);
+      const isInsideColorPop = colorPopRef.current?.contains(e.target);
+
+      if (!isInsidePalette && !isInsideStylePop && !isInsideSizePop && !isInsideColorPop) {
+        setShowStyle(false);
+        setShowSize(false);
+        setShowColor(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, []);
 
   const setSize = (px) => {
     onChange((prev) => ({ ...prev, size: px }));
@@ -31,6 +56,21 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
     onChange((prev) => ({ ...prev, color: css }));
     setShowColor(false);
   };
+
+  const handleCustomColorClick = (e) => {
+    e.stopPropagation();
+    colorInputRef.current?.click();
+  };
+
+  const handleCustomColorChange = (e) => {
+    e.stopPropagation();
+    const newColor = e.target.value;
+    setCustomColor(newColor);
+    onChange((prev) => ({ ...prev, color: newColor }));
+  };
+
+  const isCustomColorActive =
+    tool.color && !STROKE_COLORS.some((c) => c.css === tool.color) && tool.color !== undefined;
 
   const anchorFrom = (el, setPos) => {
     if (!el) return;
@@ -61,7 +101,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   };
 
   return (
-    <div className={styles.palette} role="toolbar" aria-label="Brush tools">
+    <div ref={paletteRef} className={styles.palette} role="toolbar" aria-label="Brush tools">
       <button
         className={`${styles.paletteBtn} ${tool.kind === TOOL_KINDS.SELECT ? styles.activeBtn : ''}`}
         onClick={() => onChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }))}
@@ -121,6 +161,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       {showStyle &&
         createPortal(
           <div
+            ref={stylePopRef}
             id={styleId}
             role="menu"
             className={styles.palettePop}
@@ -149,6 +190,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       {showSize &&
         createPortal(
           <div
+            ref={sizePopRef}
             id={sizeId}
             role="menu"
             className={styles.palettePop}
@@ -175,6 +217,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       {showColor &&
         createPortal(
           <div
+            ref={colorPopRef}
             id={colorId}
             role="menu"
             className={styles.palettePop}
@@ -209,6 +252,31 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
                 {c.name}
               </button>
             ))}
+
+            <div className={styles.colorDivider} />
+
+            <button
+              role="menuitemradio"
+              aria-checked={isCustomColorActive}
+              className={`${styles.paletteItem} ${styles.color} ${styles.customColor} ${isCustomColorActive ? styles.active : ''}`}
+              onClick={handleCustomColorClick}
+              title="Pick custom color"
+            >
+              <span
+                className={`${styles.swatchDot} ${styles.customSwatch}`}
+                style={{ background: isCustomColorActive ? tool.color : customColor }}
+                aria-hidden="true"
+              />
+              Custom
+              <input
+                ref={colorInputRef}
+                type="color"
+                value={isCustomColorActive ? tool.color : customColor}
+                onChange={handleCustomColorChange}
+                className={styles.colorInput}
+                aria-label="Pick custom color"
+              />
+            </button>
           </div>,
           document.body
         )}

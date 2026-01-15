@@ -120,6 +120,43 @@
   box-shadow: 0 0 0 2px #ffffff inset;
 }
 
+.colorDivider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: var(--spacing-xs, 4px) 0;
+}
+
+.customColor {
+  position: relative;
+}
+
+.customSwatch {
+  background: conic-gradient(
+    from 0deg,
+    #ff0000,
+    #ff8000,
+    #ffff00,
+    #00ff00,
+    #00ffff,
+    #0000ff,
+    #8000ff,
+    #ff0080,
+    #ff0000
+  );
+}
+
+.customColor.active .customSwatch {
+  background: var(--custom-color, currentColor);
+}
+
+.colorInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
 @media (hover: none) and (pointer: coarse) {
   .palette {
     left: 10px;
