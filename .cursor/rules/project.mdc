@@ -24,22 +24,76 @@ A lightweight, infinite canvas whiteboard app built with React 19 and Vite. Feat
 - **Testing**: Vitest + React Testing Library
 - **Linting**: ESLint
 
-## File Structure
+## File Structure (Feature-Based Architecture)
+
+We use **Feature-Based (Screaming) Architecture** where top-level folders represent business domains, not technology types.
 
 ```
 src/
-├── styles/           # Global styles (variables, reset, typography, utilities)
-├── hooks/            # Custom React hooks (Phase 2 refactoring)
-├── utils/            # Pure utility functions (Phase 3 refactoring)
-├── constants/        # Static data (colors, tools, sizes)
-├── components/       # React components (each in own folder)
-│   └── ComponentName/
-│       ├── ComponentName.jsx
-│       ├── ComponentName.module.css
-│       └── index.js
+├── styles/              # Global styles (variables, reset, typography, utilities)
+├── components/          # SHARED, DUMB UI only (knows nothing about features)
+│   ├── IconButton/
+│   ├── ThemeToggle/
+│   └── Tooltip/
+├── hooks/               # APP-WIDE generic hooks only
+│   └── useTheme.js      # Could be used in any project
+├── utils/               # APP-WIDE generic helpers only
+│   └── math.js          # Generic math functions
+├── features/            # THE CORE BUSINESS LOGIC
+│   └── Whiteboard/      # Everything for the drawing feature
+│       ├── components/  # Components ONLY used by Whiteboard
+│       │   ├── Canvas/
+│       │   ├── BrushPalette/
+│       │   ├── Toaster/
+│       │   └── FooterBadge/
+│       ├── hooks/       # Domain-specific hooks
+│       │   ├── useCanvasSetup.js
+│       │   ├── useCanvasView.js
+│       │   ├── useStrokeManager.js
+│       │   ├── useKeyboardShortcuts.js
+│       │   ├── useWheelZoom.js
+│       │   ├── usePinchZoom.js
+│       │   └── useImagePaste.js
+│       ├── utils/       # Canvas-specific utilities
+│       │   └── canvas.js
+│       ├── constants/   # Tool definitions, colors, sizes
+│       │   ├── tools.js
+│       │   └── colors.js
+│       └── index.js     # Public API - only export what App needs
 ├── App.jsx
 ├── App.css
 └── index.jsx
+```
+
+### Architecture Rules
+
+**1. Feature Encapsulation**
+- All whiteboard logic lives in `features/Whiteboard/`
+- The feature has its own hooks/, components/, utils/, constants/
+- `index.js` exports only the public API
+
+**2. Shared Components (`src/components/`)**
+- Only "dumb" UI components (Button, Modal, Tooltip)
+- Know nothing about canvas or drawing logic
+- Reusable across any feature
+
+**3. Global Hooks (`src/hooks/`)**
+- Only hooks that could work in any project
+- If a hook mentions "Canvas", "Stroke", "Zoom" → it belongs in the feature
+
+**4. Import Rules**
+```js
+// ✓ GOOD: Feature imports shared components
+import { IconButton } from '@/components/IconButton';
+
+// ✓ GOOD: Feature imports its own hooks (relative)
+import { useStrokeManager } from './hooks/useStrokeManager';
+
+// ✓ GOOD: App imports feature's public API
+import { Whiteboard } from '@/features/Whiteboard';
+
+// ✗ BAD: App imports feature internals
+import { BrushPalette } from '@/features/Whiteboard/components/BrushPalette';
 ```
 
 ## CSS Conventions
@@ -167,9 +221,53 @@ export { default } from './ComponentName.jsx'
 
 ## Testing
 
-- Test files: `*.test.jsx` alongside components
-- Run tests: `npm test`
-- Focus on user interactions, not implementation details
+### Test Framework
+- **Vitest** for test runner
+- **React Testing Library** for component tests
+- **jsdom** environment
+
+### Test File Naming
+- Place tests next to source files: `useCanvasView.js` → `useCanvasView.test.js`
+- Component tests: `ComponentName.test.jsx`
+- Utility tests: `utilName.test.js`
+
+### Commands
+```bash
+npm test          # Watch mode
+npm test -- --run # Run once (CI)
+```
+
+### Test Structure
+```js
+import { describe, it, expect, vi } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+
+describe('hookName', () => {
+  it('describes expected behavior', () => {
+    const { result } = renderHook(() => useMyHook());
+    
+    act(() => {
+      result.current.doSomething();
+    });
+    
+    expect(result.current.value).toBe(expected);
+  });
+});
+```
+
+### Testing Guidelines
+- Test behavior, not implementation
+- Use `renderHook` for custom hooks
+- Use `render` + `screen` for components
+- Mock canvas APIs in `vitest.setup.js`
+- Avoid testing internal state directly
+
+### Current Test Coverage
+- `src/utils/canvas.test.js` - clamp, getThemeColors
+- `src/hooks/useCanvasSetup.test.js` - DPR scaling, resize
+- `src/hooks/useCanvasView.test.js` - pan/zoom, coordinate conversion
+- `src/hooks/useStrokeManager.test.js` - undo/redo history
+- `src/App.test.jsx` - help panel interaction
 
 ## Git Workflow
 

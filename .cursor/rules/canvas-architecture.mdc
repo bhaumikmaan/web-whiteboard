@@ -1,6 +1,6 @@
 ---
 description: Canvas rendering and interaction architecture
-globs: ["**/Canvas*.{js,jsx}", "**/use*.js"]
+globs: ["**/Canvas*.{js,jsx}", "**/use*.js", "**/Whiteboard/**"]
 alwaysApply: false
 ---
 
@@ -9,6 +9,8 @@ alwaysApply: false
 ## Overview
 
 The whiteboard uses HTML5 Canvas with a custom rendering loop. No external canvas libraries.
+
+All canvas logic is encapsulated in `src/features/Whiteboard/` following Feature-Based Architecture.
 
 ## Rendering Pipeline
 
@@ -176,6 +178,37 @@ dragover (preventDefault) → drop → files → Image → Stroke
 - Drag image → move
 - Drag corner handle → resize
 - Click empty → deselect
+
+## Custom Hooks Architecture
+
+All hooks live in `src/features/Whiteboard/hooks/` (domain-specific, not global).
+
+| Hook | Responsibility | Tested |
+|------|----------------|--------|
+| `useCanvasSetup` | DPR scaling, ResizeObserver | ✓ |
+| `useCanvasView` | Pan/zoom state, coordinate transform | ✓ |
+| `useStrokeManager` | Stroke array, undo/redo history | ✓ |
+| `useKeyboardShortcuts` | Space-to-pan, Cmd+Z, Escape | - |
+| `useWheelZoom` | Mouse wheel zoom, trackpad pan | - |
+| `usePinchZoom` | Touch pinch gesture, double-tap | - |
+| `useImagePaste` | Clipboard paste, drag-drop | - |
+
+### Hook Dependencies
+```
+features/Whiteboard/
+├── components/
+│   └── Canvas.jsx
+│       ├── useCanvasSetup(canvasRef) → ctxRef, dprRef
+│       ├── useCanvasView() → viewRef, screenToWorld, resetView
+│       ├── useStrokeManager() → strokesRef, redoRef, undo, redo
+│       ├── useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef)
+│       ├── useWheelZoom(canvasRef, viewRef)
+│       ├── usePinchZoom(canvasRef, viewRef, stateRef)
+│       └── useImagePaste(canvasRef, viewRef, strokesRef, redoRef)
+├── hooks/
+│   └── (all hooks imported via relative paths)
+└── index.js → exports { Whiteboard } to App.jsx
+```
 
 ## Performance Considerations
 
