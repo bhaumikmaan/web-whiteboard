@@ -10,6 +10,7 @@ import {
   useImagePaste,
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
+import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
 
 const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
   const canvasRef = React.useRef(null);
@@ -105,7 +106,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.style.cursor = tool?.kind === 'select' ? 'grab' : 'crosshair';
+    canvas.style.cursor = tool?.kind === TOOL_KINDS.SELECT ? 'grab' : 'crosshair';
   }, [tool]);
 
   // Pointer handlers
@@ -126,7 +127,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     stateRef.current.lastX = e.clientX;
     stateRef.current.lastY = e.clientY;
     stateRef.current.panning = panning;
-    stateRef.current.drawing = !panning && e.button === 0 && tool?.kind !== 'select';
+    stateRef.current.drawing = !panning && e.button === 0 && tool?.kind !== TOOL_KINDS.SELECT;
 
     if (stateRef.current.panning) {
       canvas.style.cursor = 'grabbing';
@@ -142,7 +143,7 @@ const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
     }
 
     // Select tool logic
-    if (tool?.kind === 'select') {
+    if (tool?.kind === TOOL_KINDS.SELECT) {
       handleSelectToolDown(e, screenToWorld, stateRef, strokesRef, viewRef, canvasRef);
     }
   };
@@ -278,20 +279,15 @@ function drawPathStroke(ctx, s, themeColors, scale) {
 
 // Helper: Create a new stroke from tool settings
 function createStroke(tool, x, y, pressure) {
-  const t = tool || { kind: 'pen', size: 2, color: undefined };
+  const t = tool || DEFAULT_TOOL;
+  const isEraser = t.kind === TOOL_KINDS.ERASER;
+
   return {
-    mode: t.kind !== 'eraser' && t.color ? 'custom' : 'theme',
-    size:
-      t.kind === 'marker'
-        ? Math.max(4, t.size * 2)
-        : t.kind === 'highlighter'
-          ? Math.max(10, t.size * 6)
-          : t.kind === 'eraser'
-            ? Math.max(8, t.size * 6)
-            : t.size || 2,
-    alpha: t.kind === 'highlighter' ? 0.28 : 1,
-    erase: t.kind === 'eraser',
-    color: t.kind !== 'eraser' ? t.color : undefined,
+    mode: !isEraser && t.color ? 'custom' : 'theme',
+    size: getStrokeSize(t.kind, t.size || 2),
+    alpha: getToolAlpha(t.kind),
+    erase: isEraser,
+    color: !isEraser ? t.color : undefined,
     cap: 'round',
     join: 'round',
     points: [{ x, y, p: pressure ?? 0.5 }],

@@ -5,12 +5,13 @@ import CanvasWhiteboard from './components/CanvasWhiteboard';
 import BrushPalette from './components/BrushPalette';
 import Toaster from './components/Toaster';
 import FooterBadge from './components/FooterBadge';
+import { DEFAULT_TOOL } from './constants/tools';
 
 export default function App() {
   const [theme, setTheme] = React.useState(() =>
     window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   );
-  const [tool, setTool] = React.useState({ kind: 'pen', size: 2, color: undefined });
+  const [tool, setTool] = React.useState(DEFAULT_TOOL);
   const canvasRef = useRef(null);
 
   const onUndo = () => {
