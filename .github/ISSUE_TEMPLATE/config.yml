@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/bhaumikmaan/web-whiteboard#readme
+    about: Check the README for setup instructions and quick keys
+  - name: 💬 Discussions
+    url: https://github.com/bhaumikmaan/web-whiteboard/discussions
+    about: Ask questions and share ideas with the community
