@@ -32,11 +32,10 @@ We use **Feature-Based (Screaming) Architecture** where top-level folders repres
 src/
 ├── styles/              # Global styles (variables, reset, typography, utilities)
 ├── components/          # SHARED, DUMB UI only (knows nothing about features)
-│   ├── IconButton/
-│   ├── ThemeToggle/
-│   └── Tooltip/
+│   ├── IconButton/      # Reusable toolbar button
+│   └── ThemeToggle/     # Light/dark mode toggle button
 ├── hooks/               # APP-WIDE generic hooks only
-│   └── useTheme.js      # Could be used in any project
+│   └── useTheme.js      # Theme state with system preference detection
 ├── utils/               # APP-WIDE generic helpers only
 │   └── math.js          # Generic math functions
 ├── features/            # THE CORE BUSINESS LOGIC
@@ -270,6 +269,7 @@ describe('hookName', () => {
 - `src/constants/tools.test.js` - tool kinds, stroke size, alpha
 - `src/constants/colors.test.js` - color palette, theme swatches
 - `src/constants/sizes.test.js` - brush sizes, swatch height
+- `src/hooks/useTheme.test.js` - theme toggle, system preference
 - `src/App.test.jsx` - help panel interaction
 
 ## Git Workflow
