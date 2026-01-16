@@ -12,12 +12,18 @@
   cursor: pointer;
   backdrop-filter: blur(6px);
   display: none;
+  transition: all 0.15s ease;
 }
 
 .toggle:hover {
-  opacity: 0.9;
+  background: color-mix(in oklab, var(--text) 8%, var(--panel-bg));
+  transform: scale(1.05);
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 20%);
 }
 
+.toggle:active {
+  transform: scale(0.95);
+}
 @media (hover: hover) and (pointer: fine) {
   .toggle {
     display: inline-flex;

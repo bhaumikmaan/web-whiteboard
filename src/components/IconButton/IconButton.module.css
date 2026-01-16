@@ -11,11 +11,17 @@
   cursor: pointer;
   font-size: var(--font-size-lg, 18px);
   padding: 0;
-  transition: opacity 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .btn:hover:not(:disabled) {
-  opacity: 0.9;
+  background: color-mix(in oklab, var(--text) 8%, transparent);
+  transform: scale(1.05);
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 20%);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
 .btn:disabled {
@@ -26,4 +32,14 @@
 .active {
   background: color-mix(in oklab, var(--accent, #3b82f6) 15%, transparent);
   border-color: var(--accent, #3b82f6);
+}
+.active:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 25%, transparent);
+  border-color: var(--accent, #3b82f6);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
 }

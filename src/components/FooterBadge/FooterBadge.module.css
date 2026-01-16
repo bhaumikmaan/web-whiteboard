@@ -21,15 +21,38 @@
   max-width: calc(100vw - 24px);
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: all 0.2s ease;
 }
 
 .heart {
   color: #e03131;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
 .madeWith:hover {
-  opacity: 0.95;
+  background: color-mix(in oklab, var(--text) 5%, var(--panel-bg));
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 15%);
+  transform: translateX(-50%) scale(1.02);
+}
+
+.madeWith:hover .heart {
+  transform: scale(1.2);
+  animation: heartbeat 0.6s ease infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1.2);
+  }
+  50% {
+    transform: scale(1.35);
+  }
+}
+
+.madeWith:active {
+  transform: translateX(-50%) scale(0.98);
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -37,5 +60,14 @@
     padding: 5px var(--spacing-md, 8px);
     gap: var(--spacing-xs, 4px);
     font-size: clamp(10px, 3.6vw, 12px);
+  }
+
+  .madeWith:hover {
+    transform: translateX(-50%);
+  }
+
+  .madeWith:hover .heart {
+    animation: none;
+    transform: none;
   }
 }
