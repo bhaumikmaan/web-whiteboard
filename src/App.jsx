@@ -1,33 +1,39 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import './App.css';
 
-import CanvasWhiteboard from './components/CanvasWhiteboard';
-import BrushPalette from './components/BrushPalette';
-import Toaster from './components/Toaster';
-import FooterBadge from './components/FooterBadge';
-import ThemeToggle from './components/ThemeToggle';
+import AppShell from './components/AppShell';
+import { Whiteboard, moduleConfig as whiteboardConfig } from './modules/Whiteboard';
 import useTheme from './hooks/useTheme';
-import { DEFAULT_TOOL } from './constants/tools';
+
+/**
+ * Module configurations
+ * Add new modules here as they are implemented
+ */
+const MODULE_CONFIGS = {
+  whiteboard: whiteboardConfig,
+  // TODO: diagrams: diagramsConfig,
+  // TODO: stickies: stickiesConfig,
+};
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
-  const [tool, setTool] = React.useState(DEFAULT_TOOL);
-  const canvasRef = useRef(null);
+  const [activeMode, setActiveMode] = React.useState('whiteboard');
 
-  const onUndo = () => {
-    if (canvasRef.current) canvasRef.current.undo();
-  };
-  const onRedo = () => {
-    if (canvasRef.current) canvasRef.current.redo();
-  };
+  const config = MODULE_CONFIGS[activeMode];
 
   return (
     <div className={`App ${theme}`}>
-      <CanvasWhiteboard ref={canvasRef} theme={theme} tool={tool} />
-      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
-      <Toaster theme={theme} onToggleTheme={toggleTheme} />
-      <ThemeToggle theme={theme} onToggle={toggleTheme} />
-      <FooterBadge />
+      <AppShell
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        activeMode={activeMode}
+        onModeChange={setActiveMode}
+        helpItems={config.helpItems}
+      >
+        {activeMode === 'whiteboard' && <Whiteboard theme={theme} />}
+        {/* TODO: {activeMode === 'diagrams' && <Diagrams theme={theme} />} */}
+        {/* TODO: {activeMode === 'stickies' && <StickyNotes theme={theme} />} */}
+      </AppShell>
     </div>
   );
 }
