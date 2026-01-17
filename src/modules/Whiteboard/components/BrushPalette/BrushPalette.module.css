@@ -1,0 +1,245 @@
+.palette {
+  position: fixed;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-palette, 16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 8px);
+  padding: var(--spacing-md, 8px);
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(6px);
+}
+
+.paletteBtn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: var(--font-size-lg, 18px);
+  transition: all 0.15s ease;
+}
+
+.paletteBtn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--text) 8%, transparent);
+  transform: scale(1.05);
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 20%);
+}
+
+.paletteBtn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.activeBtn {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 15%, transparent);
+  border-color: var(--accent, #3b82f6);
+}
+
+.activeBtn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 25%, transparent);
+  border-color: var(--accent, #3b82f6);
+}
+
+.group {
+  display: inline-flex;
+  gap: var(--spacing-xs, 4px);
+}
+
+.historyBtn {
+  opacity: 0.9;
+}
+
+.historyBtn:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.paletteBtn[disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.palettePop {
+  position: fixed;
+  z-index: var(--z-popover, 100);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 6px);
+  padding: var(--spacing-md, 8px);
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-md, 0 6px 24px rgba(0, 0, 0, 0.12));
+  animation: popIn 0.15s ease-out;
+  transform-origin: left center;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+.paletteItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-md, 8px);
+  padding: var(--spacing-sm, 6px) var(--spacing-md, 8px);
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font: var(--font-weight-medium, 500) var(--font-size-sm, 12px) var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  transition: all 0.15s ease;
+}
+
+.paletteItem:hover:not(.active) {
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 15%);
+  transform: translateX(2px);
+}
+
+.paletteItem:active {
+  transform: scale(0.98);
+}
+
+.paletteItem.active {
+  background: color-mix(in oklab, var(--panel-bg) 30%, var(--accent-hover, #2563eb) 70%);
+  border-color: var(--accent-hover, #2563eb);
+  color: #ffffff;
+}
+
+.paletteItem.active:hover {
+  background: color-mix(in oklab, var(--panel-bg) 20%, var(--accent-hover, #2563eb) 80%);
+}
+
+.paletteItem.active span[aria-hidden='true'] {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.swatch {
+  display: inline-block;
+  background: currentColor;
+  border-radius: var(--radius-pill, 999px);
+  transition: transform 0.15s ease;
+}
+
+.paletteItem:hover .swatch {
+  transform: scaleX(1.1);
+}
+
+.color {
+  min-width: 140px;
+}
+
+.swatchDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06) inset;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.paletteItem:hover .swatchDot {
+  transform: scale(1.15);
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.1) inset,
+    0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.paletteItem.active .swatch {
+  background: #ffffff;
+}
+
+.paletteItem.color.active .swatchDot {
+  box-shadow: 0 0 0 2px #ffffff inset;
+}
+
+.colorDivider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: var(--spacing-xs, 4px) 0;
+}
+
+.customColor {
+  position: relative;
+}
+
+.customSwatch {
+  background: conic-gradient(
+    from 0deg,
+    #ff0000,
+    #ff8000,
+    #ffff00,
+    #00ff00,
+    #00ffff,
+    #0000ff,
+    #8000ff,
+    #ff0080,
+    #ff0000
+  );
+  animation: rainbowSpin 3s linear infinite;
+}
+
+@keyframes rainbowSpin {
+  from {
+    filter: hue-rotate(0deg);
+  }
+  to {
+    filter: hue-rotate(360deg);
+  }
+}
+
+.customColor.active .customSwatch {
+  background: var(--custom-color, currentColor);
+  animation: none;
+}
+
+.colorInput {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .palette {
+    left: 10px;
+    padding: var(--spacing-sm, 6px);
+    gap: var(--spacing-sm, 6px);
+  }
+
+  .palettePop {
+    gap: var(--spacing-xs, 4px);
+    padding: var(--spacing-sm, 6px);
+  }
+
+  .paletteBtn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .paletteItem:hover:not(.active) {
+    transform: none;
+  }
+}
