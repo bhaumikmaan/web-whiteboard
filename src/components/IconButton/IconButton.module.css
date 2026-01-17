@@ -1,0 +1,45 @@
+.btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: var(--font-size-lg, 18px);
+  padding: 0;
+  transition: all 0.15s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--text) 8%, transparent);
+  transform: scale(1.05);
+  border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 20%);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.active {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 15%, transparent);
+  border-color: var(--accent, #3b82f6);
+}
+.active:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 25%, transparent);
+  border-color: var(--accent, #3b82f6);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

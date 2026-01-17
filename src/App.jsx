@@ -5,12 +5,12 @@ import CanvasWhiteboard from './components/CanvasWhiteboard';
 import BrushPalette from './components/BrushPalette';
 import Toaster from './components/Toaster';
 import FooterBadge from './components/FooterBadge';
+import ThemeToggle from './components/ThemeToggle';
+import useTheme from './hooks/useTheme';
 import { DEFAULT_TOOL } from './constants/tools';
 
 export default function App() {
-  const [theme, setTheme] = React.useState(() =>
-    window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  );
+  const { theme, toggleTheme } = useTheme();
   const [tool, setTool] = React.useState(DEFAULT_TOOL);
   const canvasRef = useRef(null);
 
@@ -21,35 +21,12 @@ export default function App() {
     if (canvasRef.current) canvasRef.current.redo();
   };
 
-  // Keep theme variables on :root so portals/popouts inherit them
-  React.useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  React.useEffect(() => {
-    if (!window.matchMedia) return;
-    const mql = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e) => setTheme(e.matches ? 'dark' : 'light');
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, []);
-
   return (
     <div className={`App ${theme}`}>
       <CanvasWhiteboard ref={canvasRef} theme={theme} tool={tool} />
       <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
-
-      <Toaster theme={theme} onToggleTheme={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))} />
-
-      <button
-        className="theme-toggle"
-        onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-        aria-label="Toggle color scheme"
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      >
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
-
+      <Toaster theme={theme} onToggleTheme={toggleTheme} />
+      <ThemeToggle theme={theme} onToggle={toggleTheme} />
       <FooterBadge />
     </div>
   );
