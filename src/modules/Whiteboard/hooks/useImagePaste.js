@@ -18,17 +18,17 @@ export default function useImagePaste(canvasRef, viewRef, strokesRef, redoRef) {
         const rect = canvas.getBoundingClientRect();
         const { panX, panY, scale } = viewRef.current;
 
-        // Viewport size in world units
-        const viewW = rect.width / scale;
-        const viewH = rect.height / scale;
+        // Target screen size: ~60% of the visible canvas area (in screen pixels)
+        const screenMaxW = rect.width * 0.6;
+        const screenMaxH = rect.height * 0.6;
 
-        // Fit image into ~60% of viewport (scale up or down)
-        const maxW = viewW * 0.6;
-        const maxH = viewH * 0.6;
-        const factor = Math.min(maxW / img.width, maxH / img.height);
+        // Scale factor to fit image within screen bounds
+        const factor = Math.min(1, screenMaxW / img.width, screenMaxH / img.height);
 
-        const w = img.width * factor;
-        const h = img.height * factor;
+        // Calculate screen dimensions, then convert to world units
+        // Dividing by scale ensures the image appears the same screen size regardless of zoom
+        const w = (img.width * factor) / scale;
+        const h = (img.height * factor) / scale;
 
         // Center in current view
         const cx = (rect.width / 2 - panX) / scale;
