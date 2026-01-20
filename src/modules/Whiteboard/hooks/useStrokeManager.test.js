@@ -7,7 +7,8 @@ describe('useStrokeManager', () => {
     const { result } = renderHook(() => useStrokeManager());
 
     expect(result.current.strokesRef.current).toEqual([]);
-    expect(result.current.redoRef.current).toEqual([]);
+    expect(result.current.redoStackRef.current).toEqual([]);
+    expect(result.current.undoStackRef.current).toEqual([]);
   });
 
   it('adds strokes and clears redo stack', () => {
@@ -21,6 +22,7 @@ describe('useStrokeManager', () => {
 
     expect(result.current.strokesRef.current).toHaveLength(1);
     expect(result.current.strokesRef.current[0]).toBe(stroke);
+    expect(result.current.undoStackRef.current).toHaveLength(1);
   });
 
   it('undo moves stroke to redo stack', () => {
@@ -42,8 +44,8 @@ describe('useStrokeManager', () => {
 
     expect(result.current.strokesRef.current).toHaveLength(1);
     expect(result.current.strokesRef.current[0]).toBe(stroke1);
-    expect(result.current.redoRef.current).toHaveLength(1);
-    expect(result.current.redoRef.current[0]).toBe(stroke2);
+    expect(result.current.redoStackRef.current).toHaveLength(1);
+    expect(result.current.redoStackRef.current[0]).toEqual({ type: 'add_stroke', stroke: stroke2 });
   });
 
   it('redo moves stroke back from redo stack', () => {
@@ -57,7 +59,7 @@ describe('useStrokeManager', () => {
     });
 
     expect(result.current.strokesRef.current).toHaveLength(0);
-    expect(result.current.redoRef.current).toHaveLength(1);
+    expect(result.current.redoStackRef.current).toHaveLength(1);
 
     act(() => {
       result.current.redo();
@@ -65,10 +67,10 @@ describe('useStrokeManager', () => {
 
     expect(result.current.strokesRef.current).toHaveLength(1);
     expect(result.current.strokesRef.current[0]).toBe(stroke);
-    expect(result.current.redoRef.current).toHaveLength(0);
+    expect(result.current.redoStackRef.current).toHaveLength(0);
   });
 
-  it('undo does nothing when strokes array is empty', () => {
+  it('undo does nothing when undo stack is empty', () => {
     const { result } = renderHook(() => useStrokeManager());
 
     act(() => {
@@ -76,7 +78,7 @@ describe('useStrokeManager', () => {
     });
 
     expect(result.current.strokesRef.current).toHaveLength(0);
-    expect(result.current.redoRef.current).toHaveLength(0);
+    expect(result.current.redoStackRef.current).toHaveLength(0);
   });
 
   it('redo does nothing when redo stack is empty', () => {
@@ -98,13 +100,13 @@ describe('useStrokeManager', () => {
       result.current.undo(); // stroke2 goes to redo
     });
 
-    expect(result.current.redoRef.current).toHaveLength(1);
+    expect(result.current.redoStackRef.current).toHaveLength(1);
 
     act(() => {
       result.current.addStroke({ id: 3 }); // Should clear redo
     });
 
-    expect(result.current.redoRef.current).toHaveLength(0);
+    expect(result.current.redoStackRef.current).toHaveLength(0);
     expect(result.current.strokesRef.current).toHaveLength(2);
   });
 
@@ -116,13 +118,13 @@ describe('useStrokeManager', () => {
       result.current.undo();
     });
 
-    expect(result.current.redoRef.current).toHaveLength(1);
+    expect(result.current.redoStackRef.current).toHaveLength(1);
 
     act(() => {
       result.current.clearRedoStack();
     });
 
-    expect(result.current.redoRef.current).toHaveLength(0);
+    expect(result.current.redoStackRef.current).toHaveLength(0);
   });
 
   it('supports multiple undo/redo operations', () => {
@@ -142,7 +144,7 @@ describe('useStrokeManager', () => {
     });
 
     expect(result.current.strokesRef.current).toHaveLength(0);
-    expect(result.current.redoRef.current).toHaveLength(3);
+    expect(result.current.redoStackRef.current).toHaveLength(3);
 
     // Redo all
     act(() => {
@@ -152,6 +154,151 @@ describe('useStrokeManager', () => {
     });
 
     expect(result.current.strokesRef.current).toHaveLength(3);
-    expect(result.current.redoRef.current).toHaveLength(0);
+    expect(result.current.redoStackRef.current).toHaveLength(0);
+  });
+
+  // Tests for erase undo/redo
+  it('deleteStrokes can be undone', () => {
+    const { result } = renderHook(() => useStrokeManager());
+
+    const stroke1 = { id: 1 };
+    const stroke2 = { id: 2 };
+    const stroke3 = { id: 3 };
+
+    act(() => {
+      result.current.addStroke(stroke1);
+      result.current.addStroke(stroke2);
+      result.current.addStroke(stroke3);
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(3);
+
+    // Delete stroke at index 1 (stroke2)
+    act(() => {
+      result.current.deleteStrokes([1]);
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(2);
+    expect(result.current.strokesRef.current[0]).toBe(stroke1);
+    expect(result.current.strokesRef.current[1]).toBe(stroke3);
+
+    // Undo the delete
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(3);
+    expect(result.current.strokesRef.current[0]).toBe(stroke1);
+    expect(result.current.strokesRef.current[1]).toBe(stroke2);
+    expect(result.current.strokesRef.current[2]).toBe(stroke3);
+  });
+
+  it('deleteStrokes can be redone after undo', () => {
+    const { result } = renderHook(() => useStrokeManager());
+
+    const stroke1 = { id: 1 };
+    const stroke2 = { id: 2 };
+
+    act(() => {
+      result.current.addStroke(stroke1);
+      result.current.addStroke(stroke2);
+    });
+
+    // Delete stroke1
+    act(() => {
+      result.current.deleteStrokes([0]);
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(1);
+
+    // Undo
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(2);
+
+    // Redo the delete
+    act(() => {
+      result.current.redo();
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(1);
+    expect(result.current.strokesRef.current[0]).toBe(stroke2);
+  });
+
+  it('clearCanvas can be undone', () => {
+    const { result } = renderHook(() => useStrokeManager());
+
+    const stroke1 = { id: 1 };
+    const stroke2 = { id: 2 };
+
+    act(() => {
+      result.current.addStroke(stroke1);
+      result.current.addStroke(stroke2);
+    });
+
+    // Clear canvas
+    act(() => {
+      result.current.clearCanvas();
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(0);
+
+    // Undo clear
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.strokesRef.current).toHaveLength(2);
+    expect(result.current.strokesRef.current[0]).toEqual(stroke1);
+    expect(result.current.strokesRef.current[1]).toEqual(stroke2);
+  });
+
+  it('mixed operations undo/redo correctly', () => {
+    const { result } = renderHook(() => useStrokeManager());
+
+    const stroke1 = { id: 1 };
+    const stroke2 = { id: 2 };
+    const stroke3 = { id: 3 };
+
+    // Add strokes
+    act(() => {
+      result.current.addStroke(stroke1);
+      result.current.addStroke(stroke2);
+    });
+
+    // Delete stroke1
+    act(() => {
+      result.current.deleteStrokes([0]);
+    });
+
+    // Add stroke3
+    act(() => {
+      result.current.addStroke(stroke3);
+    });
+
+    expect(result.current.strokesRef.current).toEqual([stroke2, stroke3]);
+
+    // Undo add stroke3
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.strokesRef.current).toEqual([stroke2]);
+
+    // Undo delete stroke1
+    act(() => {
+      result.current.undo();
+    });
+
+    expect(result.current.strokesRef.current).toEqual([stroke1, stroke2]);
+
+    // Redo delete stroke1
+    act(() => {
+      result.current.redo();
+    });
+
+    expect(result.current.strokesRef.current).toEqual([stroke2]);
   });
 });

@@ -1,12 +1,18 @@
 export {
   TOOL_KINDS,
+  PEN_TOOLS,
+  ERASER_TOOLS,
   DRAWING_TOOLS,
+  ERASER_MODES,
   TOOL_OPTIONS,
+  ERASER_OPTIONS,
   TOOL_SIZE_MULTIPLIERS,
   TOOL_MIN_SIZES,
   TOOL_ALPHAS,
   DEFAULT_TOOL,
+  isPenTool,
   isDrawingTool,
+  isEraserTool,
   getStrokeSize,
   getToolAlpha,
 } from './tools';

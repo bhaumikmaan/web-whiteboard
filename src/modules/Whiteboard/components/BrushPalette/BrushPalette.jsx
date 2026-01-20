@@ -1,29 +1,50 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import styles from './BrushPalette.module.css';
-import { TOOL_KINDS, TOOL_OPTIONS, isDrawingTool } from '../../constants/tools';
+import {
+  TOOL_KINDS,
+  TOOL_OPTIONS,
+  ERASER_OPTIONS,
+  isPenTool,
+  isEraserTool,
+  isDrawingTool,
+} from '../../constants/tools';
 import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
 import { BRUSH_SIZES, getSwatchHeight } from '../../constants/sizes';
 
-export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
+export default function BrushPalette({
+  theme,
+  tool,
+  onChange,
+  onUndo,
+  onRedo,
+  onClearCanvas,
+  onDeleteImage,
+  hasSelectedImage,
+}) {
   const [showSize, setShowSize] = React.useState(false);
   const [showStyle, setShowStyle] = React.useState(false);
   const [showColor, setShowColor] = React.useState(false);
+  const [showEraser, setShowEraser] = React.useState(false);
   const [stylePos, setStylePos] = React.useState({ top: 0, left: 0 });
   const [sizePos, setSizePos] = React.useState({ top: 0, left: 0 });
   const [colorPos, setColorPos] = React.useState({ top: 0, left: 0 });
+  const [eraserPos, setEraserPos] = React.useState({ top: 0, left: 0 });
   const [customColor, setCustomColor] = React.useState('#6366f1');
   const paletteRef = React.useRef(null);
   const stylePopRef = React.useRef(null);
   const sizePopRef = React.useRef(null);
   const colorPopRef = React.useRef(null);
+  const eraserPopRef = React.useRef(null);
   const styleBtnRef = React.useRef(null);
   const sizeBtnRef = React.useRef(null);
   const colorBtnRef = React.useRef(null);
+  const eraserBtnRef = React.useRef(null);
   const colorInputRef = React.useRef(null);
   const sizeId = 'menu-sizes';
   const styleId = 'menu-styles';
   const colorId = 'menu-colors';
+  const eraserId = 'menu-eraser';
 
   // Close menus when clicking outside
   React.useEffect(() => {
@@ -32,11 +53,13 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       const isInsideStylePop = stylePopRef.current?.contains(e.target);
       const isInsideSizePop = sizePopRef.current?.contains(e.target);
       const isInsideColorPop = colorPopRef.current?.contains(e.target);
+      const isInsideEraserPop = eraserPopRef.current?.contains(e.target);
 
-      if (!isInsidePalette && !isInsideStylePop && !isInsideSizePop && !isInsideColorPop) {
+      if (!isInsidePalette && !isInsideStylePop && !isInsideSizePop && !isInsideColorPop && !isInsideEraserPop) {
         setShowStyle(false);
         setShowSize(false);
         setShowColor(false);
+        setShowEraser(false);
       }
     };
 
@@ -51,6 +74,10 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
   const setKind = (k) => {
     onChange((prev) => ({ ...prev, kind: k }));
     setShowStyle(false);
+  };
+  const setEraserKind = (k) => {
+    onChange((prev) => ({ ...prev, kind: k }));
+    setShowEraser(false);
   };
   const setColor = (css) => {
     onChange((prev) => ({ ...prev, color: css }));
@@ -86,22 +113,33 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
     setShowStyle((v) => !v);
     setShowSize(false);
     setShowColor(false);
+    setShowEraser(false);
   };
   const toggleSize = () => {
     anchorFrom(sizeBtnRef.current, setSizePos);
     setShowSize((v) => !v);
     setShowStyle(false);
     setShowColor(false);
+    setShowEraser(false);
   };
   const toggleColor = () => {
     anchorFrom(colorBtnRef.current, setColorPos);
     setShowColor((v) => !v);
     setShowStyle(false);
     setShowSize(false);
+    setShowEraser(false);
+  };
+  const toggleEraser = () => {
+    anchorFrom(eraserBtnRef.current, setEraserPos);
+    setShowEraser((v) => !v);
+    setShowStyle(false);
+    setShowSize(false);
+    setShowColor(false);
   };
 
   return (
     <div ref={paletteRef} className={styles.palette} role="toolbar" aria-label="Brush tools">
+      {/* Tools Section: Select, Pen, Eraser */}
       <button
         className={`${styles.paletteBtn} ${tool.kind === TOOL_KINDS.SELECT ? styles.activeBtn : ''}`}
         onClick={() => onChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }))}
@@ -113,7 +151,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
 
       <button
         ref={styleBtnRef}
-        className={`${styles.paletteBtn} ${isDrawingTool(tool.kind) ? styles.activeBtn : ''}`}
+        className={`${styles.paletteBtn} ${isPenTool(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleStyle}
         aria-haspopup="menu"
         aria-expanded={showStyle}
@@ -125,18 +163,21 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       </button>
 
       <button
-        ref={colorBtnRef}
-        className={`${styles.paletteBtn} ${tool.color ? styles.activeBtn : ''}`}
-        onClick={toggleColor}
+        ref={eraserBtnRef}
+        className={`${styles.paletteBtn} ${isEraserTool(tool.kind) ? styles.activeBtn : ''}`}
+        onClick={toggleEraser}
         aria-haspopup="menu"
-        aria-expanded={showColor}
-        aria-controls={colorId}
-        aria-label="Choose color"
-        title="Choose color"
+        aria-expanded={showEraser}
+        aria-controls={eraserId}
+        aria-label="Eraser tools"
+        title="Eraser tools"
       >
-        🎨
+        🧽
       </button>
 
+      <div className={styles.divider} />
+
+      {/* Style Section: Width, Color */}
       <button
         ref={sizeBtnRef}
         className={`${styles.paletteBtn} ${isDrawingTool(tool.kind) ? styles.activeBtn : ''}`}
@@ -150,6 +191,22 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
         📏
       </button>
 
+      <button
+        ref={colorBtnRef}
+        className={`${styles.paletteBtn} ${tool.color && isPenTool(tool.kind) ? styles.activeBtn : ''}`}
+        onClick={toggleColor}
+        aria-haspopup="menu"
+        aria-expanded={showColor}
+        aria-controls={colorId}
+        aria-label="Choose color"
+        title="Choose color"
+      >
+        🎨
+      </button>
+
+      <div className={styles.divider} />
+
+      {/* History Section: Undo, Redo */}
       <button className={`${styles.paletteBtn} ${styles.historyBtn}`} onClick={onUndo} aria-label="Undo" title="Undo">
         ↩︎
       </button>
@@ -276,6 +333,68 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
                 className={styles.colorInput}
                 aria-label="Pick custom color"
               />
+            </button>
+          </div>,
+          document.body
+        )}
+
+      {showEraser &&
+        createPortal(
+          <div
+            ref={eraserPopRef}
+            id={eraserId}
+            role="menu"
+            className={styles.palettePop}
+            style={{ top: eraserPos.top, left: eraserPos.left }}
+            aria-label="Eraser tools menu"
+          >
+            {ERASER_OPTIONS.map((o) => (
+              <button
+                key={o.key}
+                role="menuitemradio"
+                aria-checked={tool.kind === o.key}
+                className={`${styles.paletteItem} ${tool.kind === o.key ? styles.active : ''}`}
+                onClick={() => setEraserKind(o.key)}
+                title={o.description}
+              >
+                <span aria-hidden="true" style={{ marginRight: 6 }}>
+                  {o.icon}
+                </span>
+                {o.label}
+              </button>
+            ))}
+
+            <div className={styles.eraserDivider} />
+
+            <button
+              className={`${styles.paletteItem} ${styles.danger}`}
+              onClick={() => {
+                onClearCanvas?.();
+                setShowEraser(false);
+              }}
+              title="Clear all drawings from canvas"
+            >
+              <span aria-hidden="true" style={{ marginRight: 6 }}>
+                🗑️
+              </span>
+              Clear Canvas
+            </button>
+
+            <button
+              className={`${styles.paletteItem} ${hasSelectedImage ? styles.danger : ''}`}
+              onClick={() => {
+                if (hasSelectedImage) {
+                  onDeleteImage?.();
+                  setShowEraser(false);
+                }
+              }}
+              disabled={!hasSelectedImage}
+              title={hasSelectedImage ? 'Delete selected image' : 'Select an image first (use Select tool 🖐️)'}
+            >
+              <span aria-hidden="true" style={{ marginRight: 6 }}>
+                🖼️
+              </span>
+              Delete Image
             </button>
           </div>,
           document.body

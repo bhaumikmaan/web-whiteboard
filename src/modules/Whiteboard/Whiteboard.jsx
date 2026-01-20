@@ -10,6 +10,7 @@ import { DEFAULT_TOOL } from './constants/tools';
  */
 export default function Whiteboard({ theme }) {
   const [tool, setTool] = React.useState(DEFAULT_TOOL);
+  const [hasSelectedImage, setHasSelectedImage] = React.useState(false);
   const canvasRef = useRef(null);
 
   const onUndo = () => {
@@ -18,11 +19,40 @@ export default function Whiteboard({ theme }) {
   const onRedo = () => {
     if (canvasRef.current) canvasRef.current.redo();
   };
+  const onClearCanvas = () => {
+    if (canvasRef.current) canvasRef.current.clearCanvas();
+  };
+  const onDeleteImage = () => {
+    if (canvasRef.current) {
+      canvasRef.current.deleteSelectedImage();
+      setHasSelectedImage(false);
+    }
+  };
+
+  // Poll for selected image state
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      if (canvasRef.current) {
+        const selected = canvasRef.current.hasSelectedImage?.() || false;
+        setHasSelectedImage(selected);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
       <Canvas ref={canvasRef} theme={theme} tool={tool} />
-      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
+      <BrushPalette
+        theme={theme}
+        tool={tool}
+        onChange={setTool}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onClearCanvas={onClearCanvas}
+        onDeleteImage={onDeleteImage}
+        hasSelectedImage={hasSelectedImage}
+      />
     </>
   );
 }

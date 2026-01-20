@@ -10,10 +10,12 @@ import {
   useImagePaste,
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
-import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
+import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha, isEraserTool } from '../../constants/tools';
+import { isPointNearStroke } from '../../../../utils/math';
 
 const Canvas = forwardRef(({ theme, tool }, ref) => {
   const canvasRef = React.useRef(null);
+  const strokeCanvasRef = React.useRef(null); // Offscreen canvas for strokes
   const rafRef = React.useRef(0);
 
   // Interaction state (mutable, doesn't trigger re-renders)
@@ -29,21 +31,35 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     dragHandle: null,
     dragOffsetX: 0,
     dragOffsetY: 0,
+    strokeErasing: false,
+    // Cursor position for eraser visualization
+    cursorX: 0,
+    cursorY: 0,
+    cursorVisible: false,
   });
+
+  const toolRef = React.useRef(tool);
+  React.useEffect(() => {
+    toolRef.current = tool;
+  }, [tool]);
 
   // Custom hooks
   const { ctxRef } = useCanvasSetup(canvasRef);
   const { viewRef, screenToWorld, resetView } = useCanvasView();
-  const { strokesRef, redoRef, undo, redo, clearRedoStack } = useStrokeManager();
+  const { strokesRef, redoRef, undo, redo, clearRedoStack, clearCanvas, deleteStroke, deleteStrokes, registerStroke } =
+    useStrokeManager();
 
-  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
+  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, undo, redo);
   useWheelZoom(canvasRef, viewRef);
   useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = usePinchZoom(canvasRef, viewRef, stateRef);
 
   // Theme colors
-  const themeColors = React.useMemo(() => getThemeColors(theme), [theme]);
+  const themeColorsRef = React.useRef(getThemeColors(theme));
+  React.useEffect(() => {
+    themeColorsRef.current = getThemeColors(theme);
+  }, [theme]);
 
   // Main draw loop
   const draw = React.useCallback(() => {
@@ -52,25 +68,62 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     if (!canvas || !ctx) return;
 
     const { panX, panY, scale } = viewRef.current;
+    const themeColors = themeColorsRef.current;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw strokes
+    const strokes = strokesRef.current;
+    const selectedIdx = stateRef.current.selectedImageIndex;
+
+    if (!strokeCanvasRef.current) {
+      // Avoid image deletion when erasing
+      strokeCanvasRef.current = document.createElement('canvas');
+    }
+    const strokeCanvas = strokeCanvasRef.current;
+    if (strokeCanvas.width !== canvas.width || strokeCanvas.height !== canvas.height) {
+      strokeCanvas.width = canvas.width;
+      strokeCanvas.height = canvas.height;
+    }
+    const strokeCtx = strokeCanvas.getContext('2d');
+    strokeCtx.clearRect(0, 0, strokeCanvas.width, strokeCanvas.height);
+
+    // Draw strokes to offscreen canvas
+    strokeCtx.save();
+    strokeCtx.setTransform(ctx.getTransform());
+    strokeCtx.translate(panX, panY);
+    strokeCtx.scale(scale, scale);
+
+    // Draw non-erase strokes
+    for (let i = 0; i < strokes.length; i++) {
+      const s = strokes[i];
+      if (s.mode === 'image' || s.erase) continue;
+      if (!s.points || !s.points.length) continue;
+      drawPathStroke(strokeCtx, s, themeColors, scale);
+    }
+
+    // Apply erase strokes
+    for (let i = 0; i < strokes.length; i++) {
+      const s = strokes[i];
+      if (!s.erase) continue;
+      if (!s.points || !s.points.length) continue;
+      drawPathStroke(strokeCtx, s, themeColors, scale);
+    }
+    strokeCtx.restore();
+
+    // Draw images to main canvas first
     ctx.save();
     ctx.translate(panX, panY);
     ctx.scale(scale, scale);
-
-    for (let i = 0; i < strokesRef.current.length; i++) {
-      const s = strokesRef.current[i];
-
+    for (let i = 0; i < strokes.length; i++) {
+      const s = strokes[i];
       if (s.mode === 'image' && s.image) {
-        drawImageStroke(ctx, s, i, stateRef.current.selectedImageIndex, viewRef.current);
-        continue;
+        drawImageStroke(ctx, s, i, selectedIdx, viewRef.current);
       }
-
-      if (!s.points.length) continue;
-      drawPathStroke(ctx, s, themeColors, scale);
     }
+    ctx.restore();
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(strokeCanvas, 0, 0);
     ctx.restore();
 
     // Draw grid and background (behind strokes)
@@ -86,8 +139,27 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
 
+    // Draw eraser cursor
+    const currentTool = toolRef.current;
+    const { cursorVisible, cursorX, cursorY } = stateRef.current;
+    if (cursorVisible && isEraserTool(currentTool?.kind)) {
+      const eraserSize = getStrokeSize(currentTool.kind, currentTool.size || 2);
+      const screenRadius = eraserSize / 2;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cursorX, cursorY, screenRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = themeColors.stroke;
+      ctx.globalAlpha = 0.4;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
     rafRef.current = requestAnimationFrame(draw);
-  }, [themeColors, ctxRef, viewRef, strokesRef]);
+  }, []);
 
   // Start render loop
   React.useEffect(() => {
@@ -106,7 +178,14 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.style.cursor = tool?.kind === TOOL_KINDS.SELECT ? 'grab' : 'crosshair';
+
+    if (isEraserTool(tool?.kind)) {
+      canvas.style.cursor = 'none';
+    } else if (tool?.kind === TOOL_KINDS.SELECT) {
+      canvas.style.cursor = 'grab';
+    } else {
+      canvas.style.cursor = 'crosshair';
+    }
   }, [tool]);
 
   // Pointer handlers
@@ -137,6 +216,18 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     if (stateRef.current.drawing) {
       clearRedoStack();
       const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+      // Stroke eraser mode - deletes entire strokes immediately when touched
+      if (tool?.kind === TOOL_KINDS.STROKE_ERASER) {
+        stateRef.current.strokeErasing = true;
+        const eraserSize = getStrokeSize(TOOL_KINDS.STROKE_ERASER, tool.size || 2) / viewRef.current.scale;
+        const indices = findStrokesAtPoint(x, y, eraserSize, strokesRef);
+        if (indices.length > 0) {
+          deleteStrokes(indices);
+        }
+        return;
+      }
+
       const stroke = createStroke(tool, x, y, e.pressure);
       strokesRef.current.push(stroke);
       return;
@@ -169,6 +260,17 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
 
     if (stateRef.current.drawing) {
       const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+      // Stroke eraser move - delete strokes immediately
+      if (stateRef.current.strokeErasing) {
+        const eraserSize = getStrokeSize(TOOL_KINDS.STROKE_ERASER, tool?.size || 2) / viewRef.current.scale;
+        const indices = findStrokesAtPoint(x, y, eraserSize, strokesRef);
+        if (indices.length > 0) {
+          deleteStrokes(indices);
+        }
+        return;
+      }
+
       const stroke = strokesRef.current[strokesRef.current.length - 1];
       if (stroke) stroke.points.push({ x, y, p: e.pressure ?? 0.5 });
       return;
@@ -195,6 +297,15 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
       }
     }
 
+    // Register completed stroke for undo
+    if (stateRef.current.drawing && !stateRef.current.strokeErasing) {
+      const lastStroke = strokesRef.current[strokesRef.current.length - 1];
+      if (lastStroke && lastStroke.points?.length > 0) {
+        registerStroke(lastStroke);
+      }
+    }
+
+    stateRef.current.strokeErasing = false;
     stateRef.current.drawing = false;
     stateRef.current.dragHandle = null;
   };
@@ -204,10 +315,50 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     stateRef.current.drawing = false;
     stateRef.current.panning = false;
     stateRef.current.pinch = null;
+    stateRef.current.strokeErasing = false;
   };
 
-  // Expose undo/redo to parent
-  useImperativeHandle(ref, () => ({ undo, redo }), [undo, redo]);
+  // Track cursor position for eraser visualization
+  const onMouseMove = (e) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      stateRef.current.cursorX = e.clientX - rect.left;
+      stateRef.current.cursorY = e.clientY - rect.top;
+    }
+  };
+
+  const onMouseEnter = () => {
+    stateRef.current.cursorVisible = true;
+  };
+
+  const onMouseLeave = () => {
+    stateRef.current.cursorVisible = false;
+  };
+
+  // Delete selected image handler
+  const deleteSelectedImage = React.useCallback(() => {
+    const idx = stateRef.current.selectedImageIndex;
+    if (idx >= 0) {
+      deleteStroke(idx);
+      stateRef.current.selectedImageIndex = -1;
+    }
+  }, [deleteStroke]);
+
+  // Check if an image is selected
+  // const hasSelectedImage = stateRef.current.selectedImageIndex >= 0;
+
+  // Expose methods to parent
+  useImperativeHandle(
+    ref,
+    () => ({
+      undo,
+      redo,
+      clearCanvas,
+      deleteSelectedImage,
+      hasSelectedImage: () => stateRef.current.selectedImageIndex >= 0,
+    }),
+    [undo, redo, clearCanvas, deleteSelectedImage]
+  );
 
   return (
     <canvas
@@ -217,6 +368,9 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
+      onMouseMove={onMouseMove}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onDoubleClick={resetView}
     />
   );
@@ -406,6 +560,25 @@ function getHandleAt(wx, wy, e, stateRef, strokesRef, viewRef, canvasRef) {
     }
   }
   return null;
+}
+
+// Helper: Find stroke indices that the eraser touches
+function findStrokesAtPoint(x, y, eraserSize, strokesRef) {
+  const indicesToDelete = [];
+
+  for (let i = 0; i < strokesRef.current.length; i++) {
+    const stroke = strokesRef.current[i];
+
+    // Skip images
+    if (stroke.mode === 'image') continue;
+
+    // Check if eraser touches any part
+    if (isPointNearStroke(x, y, stroke, eraserSize)) {
+      indicesToDelete.push(i);
+    }
+  }
+
+  return indicesToDelete;
 }
 
 export default Canvas;

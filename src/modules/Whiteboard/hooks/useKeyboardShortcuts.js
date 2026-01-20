@@ -5,9 +5,10 @@ import React from 'react';
  * @param {React.RefObject<HTMLCanvasElement>} canvasRef
  * @param {object} stateRef - Mutable state ref
  * @param {React.RefObject<Array>} strokesRef
- * @param {React.RefObject<Array>} redoRef
+ * @param {Function} undo - Undo function from useStrokeManager
+ * @param {Function} redo - Redo function from useStrokeManager
  */
-export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef) {
+export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, undo, redo) {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -30,16 +31,14 @@ export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, re
         if (stateRef.current.drawing) {
           stateRef.current.drawing = false;
         }
-        const s = strokesRef.current.pop();
-        if (s) redoRef.current.push(s);
+        undo();
         return;
       }
 
       // Redo: Cmd/Ctrl+Shift+Z or Cmd/Ctrl+Y
       if ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y') {
         e.preventDefault();
-        const s = redoRef.current.pop();
-        if (s) strokesRef.current.push(s);
+        redo();
         return;
       }
     };
@@ -75,5 +74,5 @@ export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, re
       window.removeEventListener('keydown', onEsc);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [canvasRef, stateRef, strokesRef, redoRef]);
+  }, [canvasRef, stateRef, strokesRef, undo, redo]);
 }

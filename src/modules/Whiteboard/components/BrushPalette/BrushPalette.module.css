@@ -223,6 +223,44 @@
   pointer-events: none;
 }
 
+.divider {
+  width: 100%;
+  height: 1px;
+  background: var(--panel-border);
+  margin: var(--spacing-xs, 4px) 0;
+}
+
+.eraserDivider {
+  height: 1px;
+  background: var(--panel-border);
+  margin: var(--spacing-sm, 6px) 0;
+}
+
+.paletteItem.danger {
+  color: #ef4444;
+}
+
+.paletteItem.danger:hover:not(.active) {
+  background: color-mix(in oklab, #ef4444 12%, transparent);
+  border-color: color-mix(in oklab, #ef4444 30%, var(--panel-border));
+}
+
+.paletteItem.danger span[aria-hidden='true'] {
+  filter: grayscale(0.2);
+}
+
+.paletteItem:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
+.paletteItem:disabled:hover {
+  background: transparent;
+  border-color: var(--panel-border);
+  transform: none;
+}
+
 @media (hover: none) and (pointer: coarse) {
   .palette {
     left: 10px;
