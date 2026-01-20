@@ -24,27 +24,29 @@ A lightweight, infinite canvas whiteboard app built with React 19 and Vite. Feat
 - **Testing**: Vitest + React Testing Library
 - **Linting**: ESLint
 
-## File Structure (Feature-Based Architecture)
+## File Structure (Module-Based Architecture)
 
-We use **Feature-Based (Screaming) Architecture** where top-level folders represent business domains, not technology types.
+We use **Module-Based Architecture** where top-level folders represent business domains, not technology types.
 
 ```
 src/
 ├── styles/              # Global styles (variables, reset, typography, utilities)
-├── components/          # SHARED, DUMB UI only (knows nothing about features)
+├── components/          # SHARED, DUMB UI only (knows nothing about modules)
+│   ├── AppShell/        # Consistent chrome across all modules
+│   ├── ModeSwitcher/    # Tab/button group to switch modules
+│   ├── HelpPanel/       # Configurable help panel (receives content from modules)
+│   ├── FooterBadge/     # "Made with love" footer
 │   ├── IconButton/      # Reusable toolbar button
 │   └── ThemeToggle/     # Light/dark mode toggle button
 ├── hooks/               # APP-WIDE generic hooks only
 │   └── useTheme.js      # Theme state with system preference detection
 ├── utils/               # APP-WIDE generic helpers only
 │   └── math.js          # Generic math functions
-├── features/            # THE CORE BUSINESS LOGIC
-│   └── Whiteboard/      # Everything for the drawing feature
+├── modules/             # THE CORE BUSINESS LOGIC
+│   └── Whiteboard/      # Everything for the drawing module
 │       ├── components/  # Components ONLY used by Whiteboard
 │       │   ├── Canvas/
-│       │   ├── BrushPalette/
-│       │   ├── Toaster/
-│       │   └── FooterBadge/
+│       │   └── BrushPalette/
 │       ├── hooks/       # Domain-specific hooks
 │       │   ├── useCanvasSetup.js
 │       │   ├── useCanvasView.js
@@ -58,6 +60,7 @@ src/
 │       ├── constants/   # Tool definitions, colors, sizes
 │       │   ├── tools.js
 │       │   └── colors.js
+│       ├── config.js    # Module configuration (helpItems, etc)
 │       └── index.js     # Public API - only export what App needs
 ├── App.jsx
 ├── App.css
@@ -66,34 +69,86 @@ src/
 
 ### Architecture Rules
 
-**1. Feature Encapsulation**
-- All whiteboard logic lives in `features/Whiteboard/`
-- The feature has its own hooks/, components/, utils/, constants/
+**1. Module Encapsulation**
+- All whiteboard logic lives in `modules/Whiteboard/`
+- Each module has its own hooks/, components/, utils/, constants/
 - `index.js` exports only the public API
 
 **2. Shared Components (`src/components/`)**
 - Only "dumb" UI components (Button, Modal, Tooltip)
 - Know nothing about canvas or drawing logic
-- Reusable across any feature
+- Reusable across any module
 
 **3. Global Hooks (`src/hooks/`)**
 - Only hooks that could work in any project
-- If a hook mentions "Canvas", "Stroke", "Zoom" → it belongs in the feature
+- If a hook mentions "Canvas", "Stroke", "Zoom" → it belongs in the module
 
 **4. Import Rules**
 ```js
-// ✓ GOOD: Feature imports shared components
+// ✓ GOOD: Module imports shared components
 import { IconButton } from '@/components/IconButton';
 
-// ✓ GOOD: Feature imports its own hooks (relative)
+// ✓ GOOD: Module imports its own hooks (relative)
 import { useStrokeManager } from './hooks/useStrokeManager';
 
-// ✓ GOOD: App imports feature's public API
-import { Whiteboard } from '@/features/Whiteboard';
+// ✓ GOOD: App imports module's public API
+import { Whiteboard } from '@/modules/Whiteboard';
 
-// ✗ BAD: App imports feature internals
-import { BrushPalette } from '@/features/Whiteboard/components/BrushPalette';
+// ✗ BAD: App imports module internals
+import { BrushPalette } from '@/modules/Whiteboard/components/BrushPalette';
 ```
+
+## AppShell Pattern
+
+The app uses an **AppShell** component that provides consistent chrome across all modules.
+
+### What AppShell Provides (Shared)
+- ModeSwitcher (tabs to switch between modules)
+- HelpPanel (configurable per module)
+- ThemeToggle
+- FooterBadge
+
+### What Modules Provide (Module-Specific)
+- Main content (canvas, workspace, etc.)
+- Module-specific toolbar/palette
+- Configuration (`config.js` with helpItems, etc.)
+
+### Module Configuration
+
+Each module exports a `config.js`:
+
+```js
+// modules/Whiteboard/config.js
+export const moduleConfig = {
+  id: 'whiteboard',
+  label: 'Whiteboard',
+  icon: '✏️',
+  helpItems: [
+    'Draw: Left mouse / 1‑finger drag',
+    'Pan: Hold Space and drag',
+    // ...
+  ],
+};
+```
+
+### Adding a New Module
+
+1. Create folder: `src/modules/NewModule/`
+2. Add `config.js` with moduleConfig
+3. Add main component + module-specific palette
+4. Export from `index.js`:
+   ```js
+   export { default as NewModule } from './NewModule';
+   export { moduleConfig } from './config';
+   ```
+5. Register in `App.jsx`:
+   ```js
+   const MODULE_CONFIGS = {
+     whiteboard: whiteboardConfig,
+     newmodule: newModuleConfig,
+   };
+   ```
+6. Uncomment mode in `ModeSwitcher.jsx`
 
 ## CSS Conventions
 
@@ -262,15 +317,26 @@ describe('hookName', () => {
 - Avoid testing internal state directly
 
 ### Current Test Coverage
-- `src/utils/canvas.test.js` - clamp, getThemeColors
-- `src/hooks/useCanvasSetup.test.js` - DPR scaling, resize
-- `src/hooks/useCanvasView.test.js` - pan/zoom, coordinate conversion
-- `src/hooks/useStrokeManager.test.js` - undo/redo history
-- `src/constants/tools.test.js` - tool kinds, stroke size, alpha
-- `src/constants/colors.test.js` - color palette, theme swatches
-- `src/constants/sizes.test.js` - brush sizes, swatch height
-- `src/hooks/useTheme.test.js` - theme toggle, system preference
-- `src/App.test.jsx` - help panel interaction
+
+**Module Tests (src/modules/Whiteboard/)**
+- `hooks/useCanvasSetup.test.js` - DPR scaling, resize
+- `hooks/useCanvasView.test.js` - pan/zoom, coordinate conversion
+- `hooks/useStrokeManager.test.js` - undo/redo history
+- `utils/canvas.test.js` - clamp, getThemeColors
+- `constants/tools.test.js` - tool kinds, stroke size, alpha
+- `constants/colors.test.js` - color palette, theme swatches
+- `constants/sizes.test.js` - brush sizes, swatch height
+- `config.test.js` - module configuration structure
+
+**Component Tests (src/components/)**
+- `HelpPanel/HelpPanel.test.jsx` - toggle, items rendering, theme button
+- `AppShell/AppShell.test.jsx` - children, chrome components
+- `FooterBadge/FooterBadge.test.jsx` - rendering, link attributes
+- `ModeSwitcher/ModeSwitcher.test.jsx` - hidden when single mode
+
+**Global Tests (src/)**
+- `hooks/useTheme.test.js` - theme toggle, system preference
+- `App.test.jsx` - help panel interaction
 
 ## Git Workflow
 

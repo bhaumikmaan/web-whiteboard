@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
-import styles from './CanvasWhiteboard.module.css';
+import styles from './Canvas.module.css';
 import {
   useCanvasSetup,
   useCanvasView,
@@ -12,7 +12,7 @@ import {
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
 
-const CanvasWhiteboard = forwardRef(({ theme, tool }, ref) => {
+const Canvas = forwardRef(({ theme, tool }, ref) => {
   const canvasRef = React.useRef(null);
   const rafRef = React.useRef(0);
 
@@ -408,4 +408,4 @@ function getHandleAt(wx, wy, e, stateRef, strokesRef, viewRef, canvasRef) {
   return null;
 }
 
-export default CanvasWhiteboard;
+export default Canvas;

@@ -1,4 +1,4 @@
-.toasterToggle {
+.toggle {
   position: fixed;
   right: calc(12px + env(safe-area-inset-right, 0px));
   top: calc(12px + env(safe-area-inset-top, 0px));
@@ -20,17 +20,17 @@
   transition: all 0.15s ease;
 }
 
-.toasterToggle:hover {
+.toggle:hover {
   background: color-mix(in oklab, var(--text) 8%, var(--panel-bg));
   transform: scale(1.05);
   border-color: color-mix(in oklab, var(--panel-border) 50%, var(--text) 20%);
 }
 
-.toasterToggle:active {
+.toggle:active {
   transform: scale(0.95);
 }
 
-.toaster {
+.panel {
   position: fixed;
   right: calc(12px + env(safe-area-inset-right, 0px));
   top: calc(60px + env(safe-area-inset-top, 0px));
@@ -48,7 +48,7 @@
   pointer-events: auto;
 }
 
-.toasterContent {
+.content {
   min-width: 280px;
   max-width: 90vw;
   background: var(--panel-bg);
@@ -60,7 +60,7 @@
   backdrop-filter: blur(6px);
 }
 
-.toasterRow {
+.header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -68,7 +68,7 @@
   margin-bottom: var(--spacing-md, 8px);
 }
 
-.toasterTitle {
+.title {
   font: var(--font-weight-semibold, 600) var(--font-size-md, 13px)
     var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
@@ -94,7 +94,7 @@
   transform: scale(0.98);
 }
 
-.helpList {
+.list {
   margin: 0;
   padding-left: 18px;
   list-style: disc;
@@ -105,26 +105,26 @@
   white-space: normal;
 }
 
-.helpList li {
+.list li {
   margin: 0;
   transition: opacity 0.15s ease;
 }
 
-.helpList li:hover {
+.list li:hover {
   opacity: 0.8;
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .toaster {
+  .panel {
     display: block;
   }
 
-  .toasterContent {
+  .content {
     min-width: 0;
     max-width: min(94vw, 520px);
   }
 
-  .toasterToggle:hover {
+  .toggle:hover {
     transform: none;
   }
 

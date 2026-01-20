@@ -1,7 +1,4 @@
-export { default as useCanvasSetup } from './useCanvasSetup';
-export { default as useCanvasView } from './useCanvasView';
-export { default as useStrokeManager } from './useStrokeManager';
-export { default as useKeyboardShortcuts } from './useKeyboardShortcuts';
-export { default as useWheelZoom } from './useWheelZoom';
-export { default as usePinchZoom } from './usePinchZoom';
-export { default as useImagePaste } from './useImagePaste';
+// App-wide generic hooks only
+// Domain-specific hooks are in features/Whiteboard/hooks/
+
+export { default as useTheme } from './useTheme';

@@ -1,0 +1,64 @@
+.switcher {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toggle, 20);
+  display: flex;
+  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-xs, 4px);
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  backdrop-filter: blur(6px);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm, 6px);
+  padding: var(--spacing-sm, 6px) var(--spacing-lg, 10px);
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font: var(--font-weight-medium, 500) var(--font-size-sm, 12px) var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tab:hover:not(.active) {
+  background: color-mix(in oklab, var(--text) 6%, transparent);
+  border-color: var(--panel-border);
+}
+
+.tab:active {
+  transform: scale(0.98);
+}
+
+.active {
+  background: color-mix(in oklab, var(--accent, #3b82f6) 15%, transparent);
+  border-color: var(--accent, #3b82f6);
+  color: var(--accent, #3b82f6);
+}
+
+.label {
+  white-space: nowrap;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .tab:hover:not(.active) {
+    background: transparent;
+    border-color: transparent;
+  }
+}
+
+@media (max-width: 480px) {
+  .label {
+    display: none;
+  }
+
+  .tab {
+    padding: var(--spacing-sm, 6px) var(--spacing-md, 8px);
+  }
+}

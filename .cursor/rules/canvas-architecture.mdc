@@ -10,7 +10,7 @@ alwaysApply: false
 
 The whiteboard uses HTML5 Canvas with a custom rendering loop. No external canvas libraries.
 
-All canvas logic is encapsulated in `src/features/Whiteboard/` following Feature-Based Architecture.
+All canvas logic is encapsulated in `src/modules/Whiteboard/` following Module-Based Architecture.
 
 ## Rendering Pipeline
 
@@ -181,7 +181,7 @@ dragover (preventDefault) → drop → files → Image → Stroke
 
 ## Custom Hooks Architecture
 
-All hooks live in `src/features/Whiteboard/hooks/` (domain-specific, not global).
+All hooks live in `src/modules/Whiteboard/hooks/` (domain-specific, not global).
 
 | Hook | Responsibility | Tested |
 |------|----------------|--------|
@@ -195,7 +195,7 @@ All hooks live in `src/features/Whiteboard/hooks/` (domain-specific, not global)
 
 ### Hook Dependencies
 ```
-features/Whiteboard/
+modules/Whiteboard/
 ├── components/
 │   └── Canvas.jsx
 │       ├── useCanvasSetup(canvasRef) → ctxRef, dprRef
