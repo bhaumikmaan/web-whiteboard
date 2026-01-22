@@ -9,6 +9,7 @@ export const moduleConfig = {
   icon: '✏️',
   helpItems: [
     'Draw: Left mouse / 1‑finger drag',
+    'Add text: Click with text tool (Enter to save, Esc to cancel)',
     'Pan: Hold Space and drag, or middle mouse',
     'Touch pan: 2‑finger drag',
     'Zoom: Mouse wheel or pinch',

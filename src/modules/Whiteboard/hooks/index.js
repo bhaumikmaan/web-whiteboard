@@ -5,3 +5,4 @@ export { default as useKeyboardShortcuts } from './useKeyboardShortcuts';
 export { default as useWheelZoom } from './useWheelZoom';
 export { default as usePinchZoom } from './usePinchZoom';
 export { default as useImagePaste } from './useImagePaste';
+export { default as useTextEditor } from './useTextEditor';

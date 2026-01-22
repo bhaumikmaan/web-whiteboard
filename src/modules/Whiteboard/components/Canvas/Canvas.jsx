@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import styles from './Canvas.module.css';
+import textEditorStyles from './TextEditor/TextEditor.module.css';
 import {
   useCanvasSetup,
   useCanvasView,
@@ -8,11 +9,13 @@ import {
   useWheelZoom,
   usePinchZoom,
   useImagePaste,
+  useTextEditor,
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
+import TextEditor from './TextEditor';
 
-const Canvas = forwardRef(({ theme, tool }, ref) => {
+const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
   const canvasRef = React.useRef(null);
   const rafRef = React.useRef(0);
 
@@ -29,12 +32,16 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     dragHandle: null,
     dragOffsetX: 0,
     dragOffsetY: 0,
+    lastClickTime: 0,
+    lastClickX: 0,
+    lastClickY: 0,
   });
 
   // Custom hooks
   const { ctxRef } = useCanvasSetup(canvasRef);
-  const { viewRef, screenToWorld, resetView } = useCanvasView();
+  const { viewRef, screenToWorld } = useCanvasView();
   const { strokesRef, redoRef, undo, redo, clearRedoStack } = useStrokeManager();
+  const textEditor = useTextEditor({ tool, onToolChange, strokesRef, clearRedoStack });
 
   useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
   useWheelZoom(canvasRef, viewRef);
@@ -63,8 +70,23 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     for (let i = 0; i < strokesRef.current.length; i++) {
       const s = strokesRef.current[i];
 
+      // Skip text stroke being edited in textarea
+      if (
+        s.mode === 'text' &&
+        textEditor.textEdit &&
+        textEditor.textEdit.strokeIndex !== undefined &&
+        textEditor.textEdit.strokeIndex === i
+      ) {
+        continue;
+      }
+
       if (s.mode === 'image' && s.image) {
         drawImageStroke(ctx, s, i, stateRef.current.selectedImageIndex, viewRef.current);
+        continue;
+      }
+
+      if (s.mode === 'text') {
+        drawTextStroke(ctx, s, themeColors);
         continue;
       }
 
@@ -87,7 +109,7 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     ctx.restore();
 
     rafRef.current = requestAnimationFrame(draw);
-  }, [themeColors, ctxRef, viewRef, strokesRef]);
+  }, [themeColors, ctxRef, viewRef, strokesRef, textEditor.textEdit]);
 
   // Start render loop
   React.useEffect(() => {
@@ -106,7 +128,13 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.style.cursor = tool?.kind === TOOL_KINDS.SELECT ? 'grab' : 'crosshair';
+    if (tool?.kind === TOOL_KINDS.SELECT) {
+      canvas.style.cursor = 'grab';
+    } else if (tool?.kind === TOOL_KINDS.TEXT) {
+      canvas.style.cursor = 'text';
+    } else {
+      canvas.style.cursor = 'crosshair';
+    }
   }, [tool]);
 
   // Pointer handlers
@@ -122,15 +150,135 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
     const isMiddle = e.button === 1;
     const panning = spaceHeld || isMiddle;
 
+    // Close text editor if starting a non-text interaction
+    if (textEditor.textEdit && tool?.kind !== TOOL_KINDS.TEXT) {
+      // Check if clicking on text editing UI
+      const target = e.target;
+      const isTextUI = target.closest(`.${textEditorStyles.textEditorContainer}`);
+
+      if (!isTextUI) {
+        textEditor.closeTextEditor();
+      }
+    }
+
     canvas.setPointerCapture(e.pointerId);
     stateRef.current.pointerId = e.pointerId;
     stateRef.current.lastX = e.clientX;
     stateRef.current.lastY = e.clientY;
     stateRef.current.panning = panning;
-    stateRef.current.drawing = !panning && e.button === 0 && tool?.kind !== TOOL_KINDS.SELECT;
+    stateRef.current.drawing =
+      !panning && e.button === 0 && tool?.kind !== TOOL_KINDS.SELECT && tool?.kind !== TOOL_KINDS.TEXT;
 
     if (stateRef.current.panning) {
       canvas.style.cursor = 'grabbing';
+      return;
+    }
+
+    // Detect double-click
+    const now = Date.now();
+    const timeSinceLastClick = now - stateRef.current.lastClickTime;
+    const distanceFromLastClick = Math.sqrt(
+      Math.pow(e.clientX - stateRef.current.lastClickX, 2) + Math.pow(e.clientY - stateRef.current.lastClickY, 2)
+    );
+    const isDoubleClick = timeSinceLastClick < 300 && distanceFromLastClick < 10;
+
+    stateRef.current.lastClickTime = now;
+    stateRef.current.lastClickX = e.clientX;
+    stateRef.current.lastClickY = e.clientY;
+
+    // Handle double-click on items (text or image)
+    if (isDoubleClick && e.button === 0 && !panning) {
+      const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+      // Check for text
+      const textIndex = getTextAt(x, y, strokesRef);
+      if (textIndex >= 0) {
+        // Switch to text tool and select/edit the text
+        if (tool?.kind !== TOOL_KINDS.TEXT) {
+          onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.TEXT }));
+        }
+        const existingText = strokesRef.current[textIndex];
+        textEditor.startTextEdit({
+          worldX: existingText.x,
+          worldY: existingText.y,
+          screenX: e.clientX,
+          screenY: e.clientY,
+          text: existingText.text,
+          color: existingText.color,
+          highlightColor: existingText.highlightColor,
+          size: existingText.size || 32,
+          align: existingText.align || 'left',
+          bold: existingText.bold || false,
+          italic: existingText.italic || false,
+          underline: existingText.underline || false,
+          strikethrough: existingText.strikethrough || false,
+          font: existingText.font || 'sans-serif',
+          strokeIndex: textIndex,
+          isEditing: true,
+        });
+        return;
+      }
+
+      // Check for image
+      const imgIndex = getImageAt(x, y, strokesRef);
+      if (imgIndex >= 0) {
+        // Switch to select tool and select the image
+        if (tool?.kind !== TOOL_KINDS.SELECT) {
+          onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }));
+        }
+        stateRef.current.selectedImageIndex = imgIndex;
+        return;
+      }
+    }
+
+    // Text tool logic
+    if (tool?.kind === TOOL_KINDS.TEXT && e.button === 0 && !panning) {
+      const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+      // Check if clicking on existing text
+      const existingTextIndex = getTextAt(x, y, strokesRef);
+
+      if (existingTextIndex >= 0) {
+        // Edit existing text - use existing properties but allow editing
+        const existingText = strokesRef.current[existingTextIndex];
+        textEditor.startTextEdit({
+          worldX: existingText.x,
+          worldY: existingText.y,
+          screenX: e.clientX,
+          screenY: e.clientY,
+          text: existingText.text,
+          color: existingText.color,
+          highlightColor: existingText.highlightColor,
+          size: existingText.size || 32,
+          align: existingText.align || 'left',
+          bold: existingText.bold || false,
+          italic: existingText.italic || false,
+          underline: existingText.underline || false,
+          strikethrough: existingText.strikethrough || false,
+          font: existingText.font || 'sans-serif',
+          strokeIndex: existingTextIndex,
+          isEditing: true,
+        });
+      } else {
+        // Create new text - use current tool settings
+        textEditor.startTextEdit({
+          worldX: x,
+          worldY: y,
+          screenX: e.clientX,
+          screenY: e.clientY,
+          text: '',
+          color: tool.textColor || tool.color,
+          highlightColor: tool.textHighlight,
+          size: tool.textSize || 32,
+          align: tool.textAlign || 'left',
+          bold: tool.textBold || false,
+          italic: tool.textItalic || false,
+          underline: tool.textUnderline || false,
+          strikethrough: tool.textStrikethrough || false,
+          font: tool.textFont || 'sans-serif',
+          isEditing: false,
+        });
+      }
       return;
     }
 
@@ -210,15 +358,47 @@ const Canvas = forwardRef(({ theme, tool }, ref) => {
   useImperativeHandle(ref, () => ({ undo, redo }), [undo, redo]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={styles.board}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerCancel}
-      onDoubleClick={resetView}
-    />
+    <div className={styles.container}>
+      <canvas
+        ref={canvasRef}
+        className={styles.board}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      />
+      <TextEditor
+        textEdit={textEditor.textEdit}
+        setTextEdit={textEditor.setTextEdit}
+        textInputRef={textEditor.textInputRef}
+        handleTextKeyDown={textEditor.handleTextKeyDown}
+        closeTextEditor={textEditor.closeTextEditor}
+        canvasRef={canvasRef}
+        viewRef={viewRef}
+        theme={theme}
+        themeColors={themeColors}
+        showAlignMenu={textEditor.showAlignMenu}
+        setShowAlignMenu={textEditor.setShowAlignMenu}
+        showStyleMenu={textEditor.showStyleMenu}
+        setShowStyleMenu={textEditor.setShowStyleMenu}
+        showFontMenu={textEditor.showFontMenu}
+        setShowFontMenu={textEditor.setShowFontMenu}
+        showSizeMenu={textEditor.showSizeMenu}
+        setShowSizeMenu={textEditor.setShowSizeMenu}
+        showColorMenu={textEditor.showColorMenu}
+        setShowColorMenu={textEditor.setShowColorMenu}
+        showHighlightMenu={textEditor.showHighlightMenu}
+        setShowHighlightMenu={textEditor.setShowHighlightMenu}
+        customTextColor={textEditor.customTextColor}
+        customHighlightColor={textEditor.customHighlightColor}
+        textColorInputRef={textEditor.textColorInputRef}
+        highlightColorInputRef={textEditor.highlightColorInputRef}
+        handleCustomTextColorClick={textEditor.handleCustomTextColorClick}
+        handleCustomTextColorChange={textEditor.handleCustomTextColorChange}
+        handleCustomHighlightColorClick={textEditor.handleCustomHighlightColorClick}
+        handleCustomHighlightColorChange={textEditor.handleCustomHighlightColorChange}
+      />
+    </div>
   );
 });
 
@@ -275,6 +455,67 @@ function drawPathStroke(ctx, s, themeColors, scale) {
 
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = 'source-over';
+}
+
+// Helper: Draw a text stroke
+function drawTextStroke(ctx, s, themeColors) {
+  ctx.save();
+  const fontSize = s.size || 32;
+  const fontWeight = s.bold ? 'bold' : 'normal';
+  const fontStyle = s.italic ? 'italic' : 'normal';
+  const fontFamily = s.font || 'sans-serif';
+
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle = s.color || themeColors.stroke;
+  ctx.textBaseline = 'top';
+  ctx.textAlign = s.align || 'left';
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  const lines = s.text.split('\n');
+  const lineHeight = fontSize * 1.2;
+
+  lines.forEach((line, index) => {
+    const y = s.y + index * lineHeight;
+    const metrics = ctx.measureText(line);
+    let startX = s.x;
+    if (s.align === 'center') startX -= metrics.width / 2;
+    if (s.align === 'right') startX -= metrics.width;
+
+    // Draw highlight/background color first
+    if (s.highlightColor) {
+      ctx.fillStyle = s.highlightColor;
+      ctx.fillRect(startX - 2, y - 2, metrics.width + 4, fontSize + 4);
+      ctx.fillStyle = s.color || themeColors.stroke;
+    }
+
+    // Draw text
+    ctx.fillText(line, s.x, y);
+
+    // Draw underline
+    if (s.underline) {
+      const underlineY = y + fontSize * 0.9;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = Math.max(1, fontSize * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(startX, underlineY);
+      ctx.lineTo(startX + metrics.width, underlineY);
+      ctx.stroke();
+    }
+
+    // Draw strikethrough
+    if (s.strikethrough) {
+      const strikeY = y + fontSize * 0.5;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = Math.max(1, fontSize * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(startX, strikeY);
+      ctx.lineTo(startX + metrics.width, strikeY);
+      ctx.stroke();
+    }
+  });
+
+  ctx.restore();
 }
 
 // Helper: Create a new stroke from tool settings
@@ -369,6 +610,37 @@ function getImageAt(wx, wy, strokesRef) {
     const stroke = strokesRef.current[i];
     if (stroke.mode === 'image') {
       if (wx >= stroke.x && wx <= stroke.x + stroke.width && wy >= stroke.y && wy <= stroke.y + stroke.height) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+// Helper: Find text stroke at world coordinates
+function getTextAt(wx, wy, strokesRef) {
+  for (let i = strokesRef.current.length - 1; i >= 0; i--) {
+    const stroke = strokesRef.current[i];
+    if (stroke.mode === 'text') {
+      const fontSize = stroke.size || 32;
+      const lineHeight = fontSize * 1.2;
+      const lines = stroke.text.split('\n');
+      const maxLineWidth = Math.max(...lines.map((line) => line.length * fontSize * 0.6));
+      const textHeight = lines.length * lineHeight;
+
+      let minX = stroke.x;
+      let maxX = stroke.x + maxLineWidth;
+
+      // Adjust bounds based on alignment
+      if (stroke.align === 'center') {
+        minX = stroke.x - maxLineWidth / 2;
+        maxX = stroke.x + maxLineWidth / 2;
+      } else if (stroke.align === 'right') {
+        minX = stroke.x - maxLineWidth;
+        maxX = stroke.x;
+      }
+
+      if (wx >= minX && wx <= maxX && wy >= stroke.y && wy <= stroke.y + textHeight) {
         return i;
       }
     }
