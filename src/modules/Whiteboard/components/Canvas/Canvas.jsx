@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import styles from './Canvas.module.css';
-import textEditorStyles from './TextEditor/TextEditor.module.css';
+import textEditorStyles from '../TextEditor/TextEditor.module.css';
 import {
   useCanvasSetup,
   useCanvasView,
@@ -12,8 +12,9 @@ import {
   useTextEditor,
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
+import { drawTextStroke, getTextAt } from '../../utils/textHelpers';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
-import TextEditor from './TextEditor';
+import TextEditor from '../TextEditor';
 
 const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
   const canvasRef = React.useRef(null);
@@ -137,6 +138,124 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
     }
   }, [tool]);
 
+  /**
+   * Handle double-click and text tool interactions
+   * @returns {boolean} True if event was handled, false otherwise
+   */
+  const handleTextInteraction = React.useCallback(
+    (e, panning) => {
+      const now = Date.now();
+      const timeSinceLastClick = now - stateRef.current.lastClickTime;
+      const distanceFromLastClick = Math.sqrt(
+        Math.pow(e.clientX - stateRef.current.lastClickX, 2) + Math.pow(e.clientY - stateRef.current.lastClickY, 2)
+      );
+      const isDoubleClick = timeSinceLastClick < 300 && distanceFromLastClick < 10;
+
+      stateRef.current.lastClickTime = now;
+      stateRef.current.lastClickX = e.clientX;
+      stateRef.current.lastClickY = e.clientY;
+
+      // Handle double-click on items (text or image)
+      if (isDoubleClick && e.button === 0 && !panning) {
+        const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+        // Check for text
+        const textIndex = getTextAt(x, y, strokesRef);
+        if (textIndex >= 0) {
+          // Switch to text tool and select/edit the text
+          if (tool?.kind !== TOOL_KINDS.TEXT) {
+            onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.TEXT }));
+          }
+          const existingText = strokesRef.current[textIndex];
+          textEditor.startTextEdit({
+            worldX: existingText.x,
+            worldY: existingText.y,
+            screenX: e.clientX,
+            screenY: e.clientY,
+            text: existingText.text,
+            color: existingText.color,
+            highlightColor: existingText.highlightColor,
+            size: existingText.size || 32,
+            align: existingText.align || 'left',
+            bold: existingText.bold || false,
+            italic: existingText.italic || false,
+            underline: existingText.underline || false,
+            strikethrough: existingText.strikethrough || false,
+            font: existingText.font || 'sans-serif',
+            strokeIndex: textIndex,
+            isEditing: true,
+          });
+          return true;
+        }
+
+        // Check for image
+        const imgIndex = getImageAt(x, y, strokesRef);
+        if (imgIndex >= 0) {
+          // Switch to select tool and select the image
+          if (tool?.kind !== TOOL_KINDS.SELECT) {
+            onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }));
+          }
+          stateRef.current.selectedImageIndex = imgIndex;
+          return true;
+        }
+      }
+
+      // Text tool logic
+      if (tool?.kind === TOOL_KINDS.TEXT && e.button === 0 && !panning) {
+        const { x, y } = screenToWorld(e.clientX, e.clientY);
+
+        // Check if clicking on existing text
+        const existingTextIndex = getTextAt(x, y, strokesRef);
+
+        if (existingTextIndex >= 0) {
+          // Edit existing text - use existing properties but allow editing
+          const existingText = strokesRef.current[existingTextIndex];
+          textEditor.startTextEdit({
+            worldX: existingText.x,
+            worldY: existingText.y,
+            screenX: e.clientX,
+            screenY: e.clientY,
+            text: existingText.text,
+            color: existingText.color,
+            highlightColor: existingText.highlightColor,
+            size: existingText.size || 32,
+            align: existingText.align || 'left',
+            bold: existingText.bold || false,
+            italic: existingText.italic || false,
+            underline: existingText.underline || false,
+            strikethrough: existingText.strikethrough || false,
+            font: existingText.font || 'sans-serif',
+            strokeIndex: existingTextIndex,
+            isEditing: true,
+          });
+        } else {
+          // Create new text - use current tool settings
+          textEditor.startTextEdit({
+            worldX: x,
+            worldY: y,
+            screenX: e.clientX,
+            screenY: e.clientY,
+            text: '',
+            color: tool.textColor || tool.color,
+            highlightColor: tool.textHighlight,
+            size: tool.textSize || 32,
+            align: tool.textAlign || 'left',
+            bold: tool.textBold || false,
+            italic: tool.textItalic || false,
+            underline: tool.textUnderline || false,
+            strikethrough: tool.textStrikethrough || false,
+            font: tool.textFont || 'sans-serif',
+            isEditing: false,
+          });
+        }
+        return true;
+      }
+
+      return false;
+    },
+    [tool, onToolChange, screenToWorld, strokesRef, textEditor]
+  );
+
   // Pointer handlers
   const onPointerDown = (e) => {
     const canvas = canvasRef.current;
@@ -174,111 +293,8 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
       return;
     }
 
-    // Detect double-click
-    const now = Date.now();
-    const timeSinceLastClick = now - stateRef.current.lastClickTime;
-    const distanceFromLastClick = Math.sqrt(
-      Math.pow(e.clientX - stateRef.current.lastClickX, 2) + Math.pow(e.clientY - stateRef.current.lastClickY, 2)
-    );
-    const isDoubleClick = timeSinceLastClick < 300 && distanceFromLastClick < 10;
-
-    stateRef.current.lastClickTime = now;
-    stateRef.current.lastClickX = e.clientX;
-    stateRef.current.lastClickY = e.clientY;
-
-    // Handle double-click on items (text or image)
-    if (isDoubleClick && e.button === 0 && !panning) {
-      const { x, y } = screenToWorld(e.clientX, e.clientY);
-
-      // Check for text
-      const textIndex = getTextAt(x, y, strokesRef);
-      if (textIndex >= 0) {
-        // Switch to text tool and select/edit the text
-        if (tool?.kind !== TOOL_KINDS.TEXT) {
-          onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.TEXT }));
-        }
-        const existingText = strokesRef.current[textIndex];
-        textEditor.startTextEdit({
-          worldX: existingText.x,
-          worldY: existingText.y,
-          screenX: e.clientX,
-          screenY: e.clientY,
-          text: existingText.text,
-          color: existingText.color,
-          highlightColor: existingText.highlightColor,
-          size: existingText.size || 32,
-          align: existingText.align || 'left',
-          bold: existingText.bold || false,
-          italic: existingText.italic || false,
-          underline: existingText.underline || false,
-          strikethrough: existingText.strikethrough || false,
-          font: existingText.font || 'sans-serif',
-          strokeIndex: textIndex,
-          isEditing: true,
-        });
-        return;
-      }
-
-      // Check for image
-      const imgIndex = getImageAt(x, y, strokesRef);
-      if (imgIndex >= 0) {
-        // Switch to select tool and select the image
-        if (tool?.kind !== TOOL_KINDS.SELECT) {
-          onToolChange((prev) => ({ ...prev, kind: TOOL_KINDS.SELECT }));
-        }
-        stateRef.current.selectedImageIndex = imgIndex;
-        return;
-      }
-    }
-
-    // Text tool logic
-    if (tool?.kind === TOOL_KINDS.TEXT && e.button === 0 && !panning) {
-      const { x, y } = screenToWorld(e.clientX, e.clientY);
-
-      // Check if clicking on existing text
-      const existingTextIndex = getTextAt(x, y, strokesRef);
-
-      if (existingTextIndex >= 0) {
-        // Edit existing text - use existing properties but allow editing
-        const existingText = strokesRef.current[existingTextIndex];
-        textEditor.startTextEdit({
-          worldX: existingText.x,
-          worldY: existingText.y,
-          screenX: e.clientX,
-          screenY: e.clientY,
-          text: existingText.text,
-          color: existingText.color,
-          highlightColor: existingText.highlightColor,
-          size: existingText.size || 32,
-          align: existingText.align || 'left',
-          bold: existingText.bold || false,
-          italic: existingText.italic || false,
-          underline: existingText.underline || false,
-          strikethrough: existingText.strikethrough || false,
-          font: existingText.font || 'sans-serif',
-          strokeIndex: existingTextIndex,
-          isEditing: true,
-        });
-      } else {
-        // Create new text - use current tool settings
-        textEditor.startTextEdit({
-          worldX: x,
-          worldY: y,
-          screenX: e.clientX,
-          screenY: e.clientY,
-          text: '',
-          color: tool.textColor || tool.color,
-          highlightColor: tool.textHighlight,
-          size: tool.textSize || 32,
-          align: tool.textAlign || 'left',
-          bold: tool.textBold || false,
-          italic: tool.textItalic || false,
-          underline: tool.textUnderline || false,
-          strikethrough: tool.textStrikethrough || false,
-          font: tool.textFont || 'sans-serif',
-          isEditing: false,
-        });
-      }
+    // Handle text interactions (double-click and text tool)
+    if (handleTextInteraction(e, panning)) {
       return;
     }
 
@@ -457,67 +473,6 @@ function drawPathStroke(ctx, s, themeColors, scale) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-// Helper: Draw a text stroke
-function drawTextStroke(ctx, s, themeColors) {
-  ctx.save();
-  const fontSize = s.size || 32;
-  const fontWeight = s.bold ? 'bold' : 'normal';
-  const fontStyle = s.italic ? 'italic' : 'normal';
-  const fontFamily = s.font || 'sans-serif';
-
-  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
-  ctx.fillStyle = s.color || themeColors.stroke;
-  ctx.textBaseline = 'top';
-  ctx.textAlign = s.align || 'left';
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
-
-  const lines = s.text.split('\n');
-  const lineHeight = fontSize * 1.2;
-
-  lines.forEach((line, index) => {
-    const y = s.y + index * lineHeight;
-    const metrics = ctx.measureText(line);
-    let startX = s.x;
-    if (s.align === 'center') startX -= metrics.width / 2;
-    if (s.align === 'right') startX -= metrics.width;
-
-    // Draw highlight/background color first
-    if (s.highlightColor) {
-      ctx.fillStyle = s.highlightColor;
-      ctx.fillRect(startX - 2, y - 2, metrics.width + 4, fontSize + 4);
-      ctx.fillStyle = s.color || themeColors.stroke;
-    }
-
-    // Draw text
-    ctx.fillText(line, s.x, y);
-
-    // Draw underline
-    if (s.underline) {
-      const underlineY = y + fontSize * 0.9;
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.lineWidth = Math.max(1, fontSize * 0.05);
-      ctx.beginPath();
-      ctx.moveTo(startX, underlineY);
-      ctx.lineTo(startX + metrics.width, underlineY);
-      ctx.stroke();
-    }
-
-    // Draw strikethrough
-    if (s.strikethrough) {
-      const strikeY = y + fontSize * 0.5;
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.lineWidth = Math.max(1, fontSize * 0.05);
-      ctx.beginPath();
-      ctx.moveTo(startX, strikeY);
-      ctx.lineTo(startX + metrics.width, strikeY);
-      ctx.stroke();
-    }
-  });
-
-  ctx.restore();
-}
-
 // Helper: Create a new stroke from tool settings
 function createStroke(tool, x, y, pressure) {
   const t = tool || DEFAULT_TOOL;
@@ -610,37 +565,6 @@ function getImageAt(wx, wy, strokesRef) {
     const stroke = strokesRef.current[i];
     if (stroke.mode === 'image') {
       if (wx >= stroke.x && wx <= stroke.x + stroke.width && wy >= stroke.y && wy <= stroke.y + stroke.height) {
-        return i;
-      }
-    }
-  }
-  return -1;
-}
-
-// Helper: Find text stroke at world coordinates
-function getTextAt(wx, wy, strokesRef) {
-  for (let i = strokesRef.current.length - 1; i >= 0; i--) {
-    const stroke = strokesRef.current[i];
-    if (stroke.mode === 'text') {
-      const fontSize = stroke.size || 32;
-      const lineHeight = fontSize * 1.2;
-      const lines = stroke.text.split('\n');
-      const maxLineWidth = Math.max(...lines.map((line) => line.length * fontSize * 0.6));
-      const textHeight = lines.length * lineHeight;
-
-      let minX = stroke.x;
-      let maxX = stroke.x + maxLineWidth;
-
-      // Adjust bounds based on alignment
-      if (stroke.align === 'center') {
-        minX = stroke.x - maxLineWidth / 2;
-        maxX = stroke.x + maxLineWidth / 2;
-      } else if (stroke.align === 'right') {
-        minX = stroke.x - maxLineWidth;
-        maxX = stroke.x;
-      }
-
-      if (wx >= minX && wx <= maxX && wy >= stroke.y && wy <= stroke.y + textHeight) {
         return i;
       }
     }

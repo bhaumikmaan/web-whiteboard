@@ -6,8 +6,8 @@ import {
   TEXT_SIZE_MAX,
   TEXT_SIZE_STEP,
   COMMON_TEXT_SIZES,
-} from '../../../constants/tools';
-import { STROKE_COLORS, getDefaultSwatchColor } from '../../../constants/colors';
+} from '../../constants/tools';
+import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
 
 export default function TextToolbar({
   textEdit,
