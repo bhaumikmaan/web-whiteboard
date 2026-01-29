@@ -107,6 +107,15 @@ To fix linting issues automatically:
 npm run lint:fix
 ```
 
+### Performance Monitoring
+
+Enable real-time performance stats in development:
+
+```bash
+npm run dev
+# Open http://localhost:5173/?perf=true
+```
+
 ### Quick Keys
 
 - **Keyboard Shortcuts** — Use quick keys for faster workflow:

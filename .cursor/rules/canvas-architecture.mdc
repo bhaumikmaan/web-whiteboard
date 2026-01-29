@@ -217,3 +217,224 @@ modules/Whiteboard/
 3. **Efficient Grid**: Only draw visible grid lines
 4. **Pointer Capture**: Prevents event loss during fast drawing
 5. **DPR Handling**: Canvas scaled for retina displays
+
+## Performance Monitoring System
+
+### Overview
+
+The app includes a built-in performance monitoring system for profiling canvas rendering performance. Enabled via URL query parameter in development mode.
+
+### Enabling Performance Monitoring
+
+Add `?perf=true` to the URL:
+```
+http://localhost:5173/?perf=true
+```
+
+This displays a real-time performance stats overlay in the top-left corner.
+
+### Architecture
+
+```
+┌────────────────────────────────────────────────────┐
+│  PerformanceMonitor Class (src/utils/performance)  │
+├────────────────────────────────────────────────────┤
+│  • startFrame() - Mark frame start                 │
+│  • endFrame() - Mark frame end, calculate metrics  │
+│  • getMetrics() - Return current performance data  │
+│  • enable()/disable() - Toggle monitoring          │
+└────────────────────────────────────────────────────┘
+              │
+              ▼
+┌────────────────────────────────────────────────────┐
+│  Canvas.jsx - Integration Point                    │
+├────────────────────────────────────────────────────┤
+│  perfMonitorRef = useRef(new PerformanceMonitor()) │
+│                                                     │
+│  draw() {                                          │
+│    perfMonitor?.startFrame()                       │
+│    // ... rendering logic ...                      │
+│    perfMonitor?.endFrame()                         │
+│  }                                                 │
+│                                                     │
+│  useImperativeHandle exposes:                      │
+│    - getPerfMetrics()                              │
+│    - getStrokeCount()                              │
+└────────────────────────────────────────────────────┘
+              │
+              ▼
+┌────────────────────────────────────────────────────┐
+│  Whiteboard.jsx - UI Layer                         │
+├────────────────────────────────────────────────────┤
+│  • Polls metrics every 500ms via useEffect         │
+│  • Conditionally renders <PerfStats /> component   │
+└────────────────────────────────────────────────────┘
+              │
+              ▼
+┌────────────────────────────────────────────────────┐
+│  PerfStats Component (src/components/PerfStats)    │
+├────────────────────────────────────────────────────┤
+│  Visual overlay displaying:                        │
+│    • FPS (frames per second)                       │
+│    • Avg Frame Time (milliseconds)                 │
+│    • Min/Max Frame Times                           │
+│    • Stroke Count                                  │
+└────────────────────────────────────────────────────┘
+```
+
+### Metrics Explained
+
+#### **FPS (Frames Per Second)**
+- **Calculation**: `min(1000 / avgFrameTime, 120)` (capped so we never show 12K/Infinity)
+- **Purpose**: Measures display refresh rate / smoothness
+- **Frame time** is the interval between `startFrame()` calls (RAF callback interval), not draw() execution time
+- **Target**: 60 FPS (16.67ms per frame)
+- **Formula**: 
+  ```js
+  fps = Math.min(1000 / avgFrameTime, 120)
+  ```
+- **Interpretation**:
+  - 60 FPS = Smooth (ideal)
+  - 30-59 FPS = Noticeable lag
+  - <30 FPS = Significant performance issues
+
+#### **Frame Time (Average)**
+- **Calculation**: Rolling average over last 60 frame intervals
+- **Purpose**: Time between RAF callbacks (real display frame interval)
+- **Measured**: From one `startFrame()` to the next `startFrame()` (not draw() duration)
+- **Formula**: 
+  ```js
+  avgFrameTime = frameTimeSamples.reduce((a, b) => a + b) / frameTimeSamples.length
+  ```
+- **Units**: Milliseconds (ms)
+- **Includes**:
+  - Clear canvas operation
+  - View transform application
+  - Drawing all strokes from stroke array
+  - Drawing images
+  - Drawing grid/background
+  - Drawing active stroke (if any)
+  - Drawing eraser cursor (if applicable)
+
+#### **Min/Max Frame Times**
+- **Calculation**: Tracked over the same 60-frame window
+- **Purpose**: Detect frame time variance (jank detection)
+- **Formula**: 
+  ```js
+  minFrameTime = Math.min(...frameTimeSamples)
+  maxFrameTime = Math.max(...frameTimeSamples)
+  ```
+- **Interpretation**:
+  - Small range (e.g., 15-17ms) = Consistent performance
+  - Large range (e.g., 10-50ms) = Inconsistent, janky experience
+
+#### **Stroke Count**
+- **Source**: `strokesRef.current.length`
+- **Purpose**: Correlate performance with scene complexity
+- **Notes**: 
+  - Includes both drawing strokes and image strokes
+  - Does not include erased strokes (removed from array)
+  - Useful for identifying O(N) performance issues
+
+### Implementation Details
+
+#### PerformanceMonitor Class (`src/utils/performance.js`)
+
+```js
+class PerformanceMonitor {
+  enabled = false;
+  frameStart = 0;
+  frameTimes = [];  // Circular buffer of 60 frame times
+  
+  startFrame() {
+    if (!this.enabled) return;
+    this.frameStart = performance.now();
+  }
+  
+  endFrame() {
+    if (!this.enabled) return;
+    const frameTime = performance.now() - this.frameStart;
+    
+    // Keep rolling window of 60 frames
+    this.frameTimes.push(frameTime);
+    if (this.frameTimes.length > 60) {
+      this.frameTimes.shift();
+    }
+  }
+  
+  getMetrics() {
+    const avg = this.frameTimes.reduce((a, b) => a + b) / this.frameTimes.length;
+    return {
+      fps: Math.round(1000 / avg),
+      avgFrameTime: avg.toFixed(2),
+      minFrameTime: Math.min(...this.frameTimes).toFixed(2),
+      maxFrameTime: Math.max(...this.frameTimes).toFixed(2)
+    };
+  }
+}
+```
+
+#### Key Design Decisions
+
+1. **60-Frame Rolling Window**: 
+   - Provides ~1 second of history at 60 FPS
+   - Smooths out temporary spikes
+   - Keeps memory usage constant
+
+2. **performance.now() API**:
+   - High-resolution timer (microsecond precision)
+   - Monotonic (never goes backward)
+   - Relative to page load, not wall clock
+
+3. **Conditional Enabling**:
+   - Zero overhead when disabled
+   - Early returns in `startFrame()`/`endFrame()`
+   - Only in development builds
+
+4. **UI Polling (500ms)**:
+   - Decouples render loop from React updates
+   - Avoids triggering React re-renders every frame
+   - Balances freshness with overhead
+
+### Usage in Development
+
+1. **Start dev server**: `npm run dev`
+2. **Open with perf flag**: `http://localhost:5173/?perf=true`
+3. **Draw strokes** and watch metrics update
+4. **Test scenarios**:
+   - Draw 100 strokes → Check FPS remains >50
+   - Zoom in/out → Check frame time spikes
+   - Erase many strokes → Check undo performance
+
+### Performance Testing
+
+Automated performance tests in `Canvas.perf.test.js`:
+
+```js
+// Test 100 strokes render under 50ms
+it('renders 100 strokes under 50ms', async () => {
+  const strokes = createTestStrokes(100);
+  const time = await measureTime(() => {
+    strokes.forEach(s => drawStroke(ctx, s));
+  });
+  expect(time).toBeLessThan(50);
+});
+```
+
+Run with: `npm run test:perf`
+
+### Troubleshooting Performance Issues
+
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| FPS drops with many strokes | O(N) rendering loop | Already fixed: Baked Layer Strategy |
+| Frame time spikes on zoom | Full redraw on view change | Expected: Rare operation |
+| Inconsistent frame times | GC pauses | Check for memory leaks |
+| Low FPS even with few strokes | Hardware limitation | Reduce canvas resolution |
+
+### Future Enhancements
+
+- [ ] Memory usage tracking (`performance.memory`)
+- [ ] GPU utilization metrics (WebGL fallback)
+- [ ] Automatic performance regression tests in CI
+- [ ] Exportable performance reports (JSON)
