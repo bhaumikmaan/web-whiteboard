@@ -58,7 +58,7 @@ export const TEXT_SIZE_STEP = 4;
 /**
  * Common text sizes for dropdown
  */
-export const COMMON_TEXT_SIZES = [8, 12, 18, 24, 36, 48, 64, 80, 144, 288];
+export const COMMON_TEXT_SIZES = [12, 18, 24, 36, 48, 64, 80, 144, 288];
 
 /**
  * Text alignment options
