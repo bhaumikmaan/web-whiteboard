@@ -14,11 +14,26 @@ import {
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { drawTextStroke, getTextAt } from '../../utils/textHelpers';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
+import { PerformanceMonitor } from '../../../../utils/performance';
 import TextEditor from '../TextEditor';
 
 const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
   const canvasRef = React.useRef(null);
   const rafRef = React.useRef(0);
+
+  // Performance monitoring (only in dev)
+  const perfMonitorRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (import.meta.env.DEV) {
+      perfMonitorRef.current = new PerformanceMonitor();
+      // Enable with query param: ?perf=true
+      if (new URLSearchParams(window.location.search).get('perf') === 'true') {
+        perfMonitorRef.current.enable();
+        console.log('🚀 Performance monitoring enabled. Stats visible in top-left corner.');
+      }
+    }
+  }, []);
 
   // Interaction state (mutable, doesn't trigger re-renders)
   const stateRef = React.useRef({
@@ -55,6 +70,9 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
 
   // Main draw loop
   const draw = React.useCallback(() => {
+    const perfMonitor = perfMonitorRef.current;
+    perfMonitor?.startFrame();
+
     const canvas = canvasRef.current;
     const ctx = ctxRef.current;
     if (!canvas || !ctx) return;
@@ -108,6 +126,8 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
     ctx.globalCompositeOperation = 'source-over';
     ctx.restore();
+
+    perfMonitor?.endFrame();
 
     rafRef.current = requestAnimationFrame(draw);
   }, [themeColors, ctxRef, viewRef, strokesRef, textEditor.textEdit]);
@@ -370,8 +390,17 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
     stateRef.current.pinch = null;
   };
 
-  // Expose undo/redo to parent
-  useImperativeHandle(ref, () => ({ undo, redo }), [undo, redo]);
+  // Expose undo/redo and performance metrics to parent
+  useImperativeHandle(
+    ref,
+    () => ({
+      undo,
+      redo,
+      getPerfMetrics: () => perfMonitorRef.current?.getMetrics() || null,
+      getStrokeCount: () => strokesRef.current.length,
+    }),
+    [undo, redo]
+  );
 
   return (
     <div className={styles.container}>
