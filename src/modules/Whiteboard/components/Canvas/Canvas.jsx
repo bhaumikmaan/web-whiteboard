@@ -46,7 +46,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
 
   useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
   useWheelZoom(canvasRef, viewRef);
-  useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
+  const { isDragOver } = useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = usePinchZoom(canvasRef, viewRef, stateRef);
 
@@ -383,6 +383,14 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       />
+      {isDragOver && (
+        <div className={styles.dropOverlay} aria-hidden>
+          <div className={styles.dropCircle}>
+            <span className={styles.dropArrow}>↓</span>
+            <span className={styles.dropText}>Drop</span>
+          </div>
+        </div>
+      )}
       <TextEditor
         textEdit={textEditor.textEdit}
         setTextEdit={textEditor.setTextEdit}
