@@ -112,6 +112,15 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       </button>
 
       <button
+        className={`${styles.paletteBtn} ${tool.kind === TOOL_KINDS.TEXT ? styles.activeBtn : ''}`}
+        onClick={() => onChange((prev) => ({ ...prev, kind: TOOL_KINDS.TEXT }))}
+        aria-label="Add text"
+        title="Add text"
+      >
+        📝
+      </button>
+
+      <button
         ref={styleBtnRef}
         className={`${styles.paletteBtn} ${isDrawingTool(tool.kind) ? styles.activeBtn : ''}`}
         onClick={toggleStyle}

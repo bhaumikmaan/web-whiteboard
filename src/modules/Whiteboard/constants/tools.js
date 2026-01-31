@@ -8,6 +8,7 @@ export const TOOL_KINDS = {
   MARKER: 'marker',
   HIGHLIGHTER: 'highlighter',
   ERASER: 'eraser',
+  TEXT: 'text',
 };
 
 export const DRAWING_TOOLS = [TOOL_KINDS.PEN, TOOL_KINDS.MARKER, TOOL_KINDS.HIGHLIGHTER, TOOL_KINDS.ERASER];
@@ -48,12 +49,66 @@ export const TOOL_ALPHAS = {
 };
 
 /**
+ * Text size range (in px)
+ */
+export const TEXT_SIZE_MIN = 8;
+export const TEXT_SIZE_MAX = 288;
+export const TEXT_SIZE_STEP = 4;
+
+/**
+ * Common text sizes for dropdown
+ */
+export const COMMON_TEXT_SIZES = [12, 18, 24, 36, 48, 64, 80, 144, 288];
+
+/**
+ * Text alignment options
+ */
+export const TEXT_ALIGNMENTS = [
+  { value: 'left', label: 'Left', icon: '⬅' },
+  { value: 'center', label: 'Center', icon: '↔' },
+  { value: 'right', label: 'Right', icon: '➡' },
+];
+
+/**
+ * Text style options
+ */
+export const TEXT_STYLES = {
+  BOLD: 'bold',
+  ITALIC: 'italic',
+  UNDERLINE: 'underline',
+  STRIKETHROUGH: 'strikethrough',
+};
+
+/**
+ * Font families
+ */
+export const FONT_FAMILIES = [
+  { value: 'sans-serif', label: 'Sans Serif' },
+  { value: 'serif', label: 'Serif' },
+  { value: 'monospace', label: 'Monospace' },
+  { value: 'cursive', label: 'Cursive' },
+  { value: 'fantasy', label: 'Fantasy' },
+  { value: 'Arial', label: 'Arial' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Times New Roman', label: 'Times New Roman' },
+  { value: 'Courier New', label: 'Courier New' },
+  { value: 'Verdana', label: 'Verdana' },
+];
+
+/**
  * Default tool state
  */
 export const DEFAULT_TOOL = {
   kind: TOOL_KINDS.PEN,
   size: 2,
   color: undefined,
+  textSize: 32,
+  textAlign: 'left',
+  textBold: false,
+  textItalic: false,
+  textUnderline: false,
+  textStrikethrough: false,
+  textFont: 'sans-serif',
 };
 
 /**

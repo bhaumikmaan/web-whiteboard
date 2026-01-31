@@ -98,6 +98,141 @@ import { Whiteboard } from '@/modules/Whiteboard';
 import { BrushPalette } from '@/modules/Whiteboard/components/BrushPalette';
 ```
 
+## Code Modularity & Anti-Bloat Rules
+
+**CRITICAL**: Keep files small, focused, and maintainable. Extract logic proactively.
+
+### File Size Limits
+
+**Hard limits** - Refactor when exceeded:
+- **Components**: 300 lines max
+- **Hooks**: 150 lines max  
+- **Utility files**: 200 lines max
+
+**Soft limits** - Consider refactoring:
+- **Components**: 200+ lines
+- **Hooks**: 100+ lines
+- **Any file**: If it handles multiple concerns
+
+### When to Extract
+
+**Extract custom hooks when:**
+- Component has 3+ useState calls for related state
+- Complex logic blocks (20+ lines) that could be reused
+- Side effects that could be isolated (data fetching, subscriptions)
+- State management for a specific feature (text editing, image handling)
+
+**Extract components when:**
+- JSX block is 50+ lines
+- Repeated UI patterns
+- Complex conditional rendering
+- Feature-specific toolbars, panels, or controls
+
+**Extract utilities when:**
+- Pure functions used in multiple places
+- Complex calculations or transformations
+- Helper functions that don't need component context
+
+### Refactoring Examples
+
+**❌ BAD: Bloated component**
+```jsx
+function Canvas() {
+  // 50 lines of state
+  const [textEdit, setTextEdit] = useState(null);
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [customColor, setCustomColor] = useState('#000');
+  // ... 47 more state declarations
+  
+  // 100 lines of callbacks
+  const handleTextEdit = () => { /* 30 lines */ };
+  const handleColorChange = () => { /* 25 lines */ };
+  // ... 10 more handlers
+  
+  // 400 lines of JSX
+  return (
+    <div>
+      {/* 200 lines of toolbar */}
+      {/* 200 lines of canvas */}
+    </div>
+  );
+}
+```
+
+**✅ GOOD: Extracted and modular**
+```jsx
+function Canvas() {
+  const textEditor = useTextEditor({ tool, onToolChange, strokesRef });
+  const drawingState = useDrawing();
+  
+  return (
+    <div>
+      {textEditor.isActive && (
+        <TextToolbar {...textEditor} />
+      )}
+      <CanvasBoard {...drawingState} />
+    </div>
+  );
+}
+
+// In hooks/useTextEditor.js (150 lines)
+function useTextEditor({ tool, onToolChange, strokesRef }) {
+  // All text editing state and logic
+}
+
+// In components/TextToolbar/TextToolbar.jsx (200 lines)
+function TextToolbar({ textEdit, setTextEdit, ... }) {
+  // Just the toolbar UI
+}
+```
+
+### Extraction Guidelines
+
+**Create hooks for:**
+- State management (e.g., `useTextEditor`, `useDrawing`)
+- Complex interactions (e.g., `usePinchZoom`, `useImagePaste`)
+- Side effects (e.g., `useKeyboardShortcuts`, `useAutoSave`)
+- Computed values (e.g., `useCanvasView`, `useCoordinates`)
+
+**Create components for:**
+- Toolbars, panels, controls (e.g., `TextToolbar`, `ColorPicker`)
+- Repeated UI patterns (e.g., `MenuButton`, `Dropdown`)
+- Feature-specific UI (e.g., `BrushPalette`, `HelpPanel`)
+- Any JSX block 50+ lines
+
+**Keep together:**
+- Closely coupled logic (extraction would add complexity)
+- Single-use, simple logic (< 20 lines)
+- Configuration objects and constants
+
+### Naming Conventions
+
+**Hooks**: `use[Feature][Action]`
+- `useTextEditor` - manages text editing
+- `useImagePaste` - handles image pasting
+- `useCanvasView` - manages pan/zoom view
+
+**Components**: `[Feature][Type]`
+- `TextToolbar` - toolbar for text
+- `ColorPicker` - picker for colors
+- `BrushPalette` - palette for brushes
+
+**Files**: Match export name
+- `useTextEditor.js` exports `useTextEditor`
+- `TextToolbar.jsx` exports `TextToolbar`
+- Always use barrel exports (`index.js`)
+
+### Review Checklist
+
+Before committing, ask:
+- [ ] Is any file over 300 lines?
+- [ ] Does any component have 5+ useState calls?
+- [ ] Is there a 50+ line JSX block that could be a component?
+- [ ] Is there complex logic (20+ lines) that could be a hook?
+- [ ] Are there repeated patterns that could be extracted?
+
+If YES to any → Refactor before committing.
+
 ## AppShell Pattern
 
 The app uses an **AppShell** component that provides consistent chrome across all modules.

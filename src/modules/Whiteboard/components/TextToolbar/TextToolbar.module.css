@@ -1,0 +1,160 @@
+.textToolbar {
+  z-index: 9998;
+  pointer-events: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  max-width: calc(100vw - 20px);
+}
+
+@media (max-width: 768px) {
+  .textToolbar {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+    max-height: 60vh;
+    overflow-y: auto;
+    width: auto;
+    right: 10px;
+    left: auto;
+  }
+}
+
+.textToolbarGroup {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 0 4px;
+  border-right: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
+
+.textToolbarGroup:last-child {
+  border-right: none;
+}
+
+@media (max-width: 768px) {
+  .textToolbarGroup {
+    padding: 4px;
+    gap: 2px;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+    width: 100%;
+    justify-content: center;
+  }
+
+  .textToolbarGroup:last-child {
+    border-bottom: none;
+  }
+}
+
+.textToolbarBtn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.textToolbarBtn:hover {
+  background: var(--bg);
+  border-color: var(--panel-border);
+}
+
+.textToolbarBtn.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+@media (max-width: 768px) {
+  .textToolbarBtn {
+    padding: 4px 6px;
+    font-size: 13px;
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .hideOnMobile {
+    display: none !important;
+  }
+}
+
+.textToolbarMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  min-width: 160px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .textToolbarMenu {
+    position: fixed;
+    right: 80px;
+    left: auto;
+    top: auto;
+    transform: none;
+    margin: 0;
+    max-width: 250px;
+    max-height: 60vh;
+  }
+}
+
+.textToolbarMenuItem {
+  background: transparent;
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.textToolbarMenuItem:hover {
+  background: var(--bg);
+}
+
+.textToolbarMenuItem.active {
+  background: var(--accent);
+  color: white;
+}
+
+.colorSwatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+}

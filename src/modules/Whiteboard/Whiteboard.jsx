@@ -21,7 +21,7 @@ export default function Whiteboard({ theme }) {
 
   return (
     <>
-      <Canvas ref={canvasRef} theme={theme} tool={tool} />
+      <Canvas ref={canvasRef} theme={theme} tool={tool} onToolChange={setTool} />
       <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
     </>
   );
