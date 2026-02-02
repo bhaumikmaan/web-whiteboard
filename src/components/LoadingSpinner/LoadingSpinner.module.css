@@ -14,7 +14,7 @@
   justify-content: center;
   width: 64px;
   height: 64px;
-  animation: spin 1.4s ease-in-out infinite;
+  animation: spin 1s cubic-bezier(0.12, 0, 0.88, 1) infinite;
 }
 
 .logo {
@@ -24,7 +24,10 @@
 }
 
 @keyframes spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
