@@ -370,8 +370,16 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
     stateRef.current.pinch = null;
   };
 
-  // Expose undo/redo to parent
-  useImperativeHandle(ref, () => ({ undo, redo }), [undo, redo]);
+  const captureView = React.useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png');
+    });
+  }, []);
+
+  // Expose undo/redo and captureView to parent
+  useImperativeHandle(ref, () => ({ undo, redo, captureView }), [undo, redo, captureView]);
 
   return (
     <div className={styles.container}>
@@ -382,6 +390,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
+        onContextMenu={(e) => e.preventDefault()}
       />
       {isDragOver && (
         <div className={styles.dropOverlay} aria-hidden>
