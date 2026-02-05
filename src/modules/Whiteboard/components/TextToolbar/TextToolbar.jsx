@@ -168,7 +168,7 @@ export default function TextToolbar({
           }}
           title="Text style"
         >
-          B
+          <Icon name="format" />
         </button>
         {showStyleMenu && (
           <div className={styles.textToolbarMenu}>

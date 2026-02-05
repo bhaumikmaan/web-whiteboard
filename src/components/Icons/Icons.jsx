@@ -16,6 +16,11 @@ import cameraSvg from './icons/camera.svg?raw';
 import alignLeftSvg from './icons/align-left.svg?raw';
 import alignCenterSvg from './icons/align-center.svg?raw';
 import alignRightSvg from './icons/align-right.svg?raw';
+import formatSvg from './icons/format.svg?raw';
+import helpSvg from './icons/help.svg?raw';
+import darkSvg from './icons/dark.svg?raw';
+import lightSvg from './icons/light.svg?raw';
+import downSvg from './icons/down.svg?raw';
 
 const sizeClass = (size) => (size === 'sm' ? styles.sizeSm : size === 'lg' ? styles.sizeLg : '');
 
@@ -36,6 +41,11 @@ const ICON_SVG_MAP = {
   alignCenter: alignCenterSvg,
   alignRight: alignRightSvg,
   highlight: highlightSvg,
+  format: formatSvg,
+  help: helpSvg,
+  dark: darkSvg,
+  light: lightSvg,
+  down: downSvg,
 };
 
 function IconWrapper({ svgContent, size, className = '', ...props }) {
@@ -97,6 +107,21 @@ export function IconAlignRight(props) {
 }
 export function IconHighlight(props) {
   return <IconWrapper svgContent={highlightSvg} {...props} />;
+}
+export function IconFormat(props) {
+  return <IconWrapper svgContent={formatSvg} {...props} />;
+}
+export function IconHelp(props) {
+  return <IconWrapper svgContent={helpSvg} {...props} />;
+}
+export function IconDark(props) {
+  return <IconWrapper svgContent={darkSvg} {...props} />;
+}
+export function IconLight(props) {
+  return <IconWrapper svgContent={lightSvg} {...props} />;
+}
+export function IconDown(props) {
+  return <IconWrapper svgContent={downSvg} {...props} />;
 }
 
 /**

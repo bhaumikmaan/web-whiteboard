@@ -16,4 +16,9 @@ export {
   IconAlignCenter,
   IconAlignRight,
   IconHighlight,
+  IconFormat,
+  IconHelp,
+  IconDark,
+  IconLight,
+  IconDown,
 } from './Icons.jsx';

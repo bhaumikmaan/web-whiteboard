@@ -1,4 +1,5 @@
 import styles from './ThemeToggle.module.css';
+import { Icon } from '@/components/Icons';
 
 /**
  * Theme toggle button - shows sun/moon icon based on current theme
@@ -14,7 +15,7 @@ export default function ThemeToggle({ theme, onToggle }) {
       aria-label="Toggle color scheme"
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
     >
-      {isDark ? '☀️' : '🌙'}
+      <Icon name={isDark ? 'light' : 'dark'} />
     </button>
   );
 }
