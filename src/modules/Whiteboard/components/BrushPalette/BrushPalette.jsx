@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import styles from './BrushPalette.module.css';
+import { Icon } from '@/components/Icons';
 import { TOOL_KINDS, TOOL_OPTIONS, isDrawingTool } from '../../constants/tools';
 import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
 import { BRUSH_SIZES, getSwatchHeight } from '../../constants/sizes';
@@ -108,7 +109,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
         aria-label="Select and move"
         title="Select and move"
       >
-        🖐️
+        <Icon name="select" />
       </button>
 
       <button
@@ -117,7 +118,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
         aria-label="Add text"
         title="Add text"
       >
-        📝
+        <Icon name="text" />
       </button>
 
       <button
@@ -130,7 +131,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
         aria-label="Choose pen style"
         title="Choose pen style"
       >
-        ✏️
+        <Icon name="pen" />
       </button>
 
       <button
@@ -143,7 +144,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
         aria-label="Choose color"
         title="Choose color"
       >
-        🎨
+        <Icon name="palette" />
       </button>
 
       <button
@@ -156,15 +157,15 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
         aria-label="Choose width"
         title="Choose width"
       >
-        📏
+        <Icon name="ruler" />
       </button>
 
       <button className={`${styles.paletteBtn} ${styles.historyBtn}`} onClick={onUndo} aria-label="Undo" title="Undo">
-        ↩︎
+        <Icon name="undo" />
       </button>
 
       <button className={`${styles.paletteBtn} ${styles.historyBtn}`} onClick={onRedo} aria-label="Redo" title="Redo">
-        ↪︎
+        <Icon name="redo" />
       </button>
 
       {onScreenshot && (
@@ -174,7 +175,7 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
           aria-label="Save canvas as image"
           title="Save canvas as image"
         >
-          📷
+          <Icon name="camera" />
         </button>
       )}
 
@@ -197,8 +198,8 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, on
                 onClick={() => setKind(o.key)}
                 title={o.label}
               >
-                <span aria-hidden="true" style={{ marginRight: 6 }}>
-                  {o.icon}
+                <span aria-hidden="true" className={styles.toolIcon}>
+                  <Icon name={o.icon} />
                 </span>
                 {o.label}
               </button>

@@ -1,12 +1,13 @@
 import styles from './ModeSwitcher.module.css';
+import { Icon } from '@/components/Icons';
 
 /**
  * Mode definitions for the app
  */
 const MODES = [
-  { id: 'whiteboard', label: 'Whiteboard', icon: '✏️' },
-  // TODO: { id: 'diagrams', label: 'Diagrams', icon: '📊' },
-  // TODO: { id: 'stickies', label: 'Sticky Notes', icon: '📝' },
+  { id: 'whiteboard', label: 'Whiteboard', icon: 'pen' },
+  // TODO: { id: 'diagrams', label: 'Diagrams', icon: 'diagrams' },
+  // TODO: { id: 'stickies', label: 'Sticky Notes', icon: 'text' },
 ];
 
 /**
@@ -27,7 +28,9 @@ export default function ModeSwitcher({ activeMode, onChange }) {
           onClick={() => onChange(mode.id)}
           title={mode.label}
         >
-          <span aria-hidden="true">{mode.icon}</span>
+          <span aria-hidden="true">
+            <Icon name={mode.icon} />
+          </span>
           <span className={styles.label}>{mode.label}</span>
         </button>
       ))}
