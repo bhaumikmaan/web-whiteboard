@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './HelpPanel.module.css';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 
 /**
  * Configurable help panel - receives items from active module

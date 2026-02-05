@@ -1,7 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import styles from './BrushPalette.module.css';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 import { TOOL_KINDS, TOOL_OPTIONS, isDrawingTool } from '../../constants/tools';
 import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
 import { BRUSH_SIZES, getSwatchHeight } from '../../constants/sizes';

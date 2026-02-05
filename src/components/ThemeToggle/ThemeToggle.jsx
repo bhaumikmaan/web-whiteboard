@@ -1,5 +1,5 @@
 import styles from './ThemeToggle.module.css';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 
 /**
  * Theme toggle button - shows sun/moon icon based on current theme

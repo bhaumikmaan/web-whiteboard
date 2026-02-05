@@ -13,7 +13,7 @@ import {
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { drawTextStroke, getTextAt } from '../../utils/textHelpers';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
 import TextEditor from '../TextEditor';
 

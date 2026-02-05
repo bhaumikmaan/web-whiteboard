@@ -1,5 +1,5 @@
 import styles from './TextToolbar.module.css';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 import {
   TEXT_ALIGNMENTS,
   FONT_FAMILIES,

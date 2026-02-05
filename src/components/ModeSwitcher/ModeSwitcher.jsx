@@ -1,5 +1,5 @@
 import styles from './ModeSwitcher.module.css';
-import { Icon } from '@/components/Icons';
+import { Icon } from '@/components/Icons/index.js';
 
 /**
  * Mode definitions for the app
