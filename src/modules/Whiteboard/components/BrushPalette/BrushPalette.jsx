@@ -5,7 +5,7 @@ import { TOOL_KINDS, TOOL_OPTIONS, isDrawingTool } from '../../constants/tools';
 import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
 import { BRUSH_SIZES, getSwatchHeight } from '../../constants/sizes';
 
-export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) {
+export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo, onScreenshot }) {
   const [showSize, setShowSize] = React.useState(false);
   const [showStyle, setShowStyle] = React.useState(false);
   const [showColor, setShowColor] = React.useState(false);
@@ -166,6 +166,17 @@ export default function BrushPalette({ theme, tool, onChange, onUndo, onRedo }) 
       <button className={`${styles.paletteBtn} ${styles.historyBtn}`} onClick={onRedo} aria-label="Redo" title="Redo">
         ↪︎
       </button>
+
+      {onScreenshot && (
+        <button
+          className={styles.paletteBtn}
+          onClick={onScreenshot}
+          aria-label="Save canvas as image"
+          title="Save canvas as image"
+        >
+          📷
+        </button>
+      )}
 
       {showStyle &&
         createPortal(

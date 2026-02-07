@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Canvas, BrushPalette } from './components';
 import { DEFAULT_TOOL } from './constants/tools';
+import { useCanvasScreenshot } from './hooks';
 
 /**
  * Main Whiteboard component - the public API for the Whiteboard module
@@ -19,10 +20,19 @@ export default function Whiteboard({ theme }) {
     if (canvasRef.current) canvasRef.current.redo();
   };
 
+  const onScreenshot = useCanvasScreenshot(canvasRef);
+
   return (
     <>
       <Canvas ref={canvasRef} theme={theme} tool={tool} onToolChange={setTool} />
-      <BrushPalette theme={theme} tool={tool} onChange={setTool} onUndo={onUndo} onRedo={onRedo} />
+      <BrushPalette
+        theme={theme}
+        tool={tool}
+        onChange={setTool}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        onScreenshot={onScreenshot}
+      />
     </>
   );
 }
