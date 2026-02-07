@@ -96,6 +96,12 @@
   }
 }
 
+.toolIcon {
+  margin-right: 6px;
+  display: inline-flex;
+  align-items: center;
+}
+
 .paletteItem {
   display: inline-flex;
   align-items: center;

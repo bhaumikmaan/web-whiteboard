@@ -6,7 +6,7 @@
 export const moduleConfig = {
   id: 'whiteboard',
   label: 'Whiteboard',
-  icon: '✏️',
+  icon: 'pen',
   helpItems: [
     'Draw: Left mouse / 1‑finger drag',
     'Add text: Click with text tool (Enter to save, Esc to cancel)',
