@@ -6,15 +6,20 @@ import React from 'react';
  * @param {object} stateRef - Mutable state ref
  * @param {React.RefObject<Array>} strokesRef
  * @param {React.RefObject<Array>} redoRef
+ * @param {React.RefObject<HTMLTextAreaElement>} [textInputRef] - When focused, Space is not used for pan
  */
-export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef) {
+export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef, textInputRef) {
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const onKeyDown = (e) => {
-      // Space to pan
+      // Space to pan - skip when typing in text editor
       if (e.code === 'Space') {
+        const active = document.activeElement;
+        if (textInputRef?.current && active === textInputRef.current) {
+          return;
+        }
         e.preventDefault();
         stateRef.current.spaceHeld = true;
         canvas.style.cursor = 'grabbing';
@@ -75,5 +80,5 @@ export default function useKeyboardShortcuts(canvasRef, stateRef, strokesRef, re
       window.removeEventListener('keydown', onEsc);
       window.removeEventListener('keyup', onKeyUp);
     };
-  }, [canvasRef, stateRef, strokesRef, redoRef]);
+  }, [canvasRef, stateRef, strokesRef, redoRef, textInputRef]);
 }

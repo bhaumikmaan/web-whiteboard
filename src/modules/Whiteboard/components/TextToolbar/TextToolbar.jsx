@@ -9,6 +9,7 @@ import {
   COMMON_TEXT_SIZES,
 } from '../../constants/tools';
 import { STROKE_COLORS, getDefaultSwatchColor } from '../../constants/colors';
+import { BULLET, hasBullet, stripBullet, getSelectedLineIndices } from '../../utils/textHelpers';
 
 export default function TextToolbar({
   textEdit,
@@ -51,6 +52,55 @@ export default function TextToolbar({
     if (keepMenu !== 'align') setShowAlignMenu(false);
     if (keepMenu !== 'color') setShowColorMenu(false);
     if (keepMenu !== 'highlight') setShowHighlightMenu(false);
+  };
+
+  const toggleBulletList = () => {
+    const textarea = textInputRef.current;
+    if (!textarea) return;
+    const text = textEdit?.text ?? '';
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const lines = text.split('\n');
+    if (lines.length === 0) {
+      setTextEdit((prev) => ({ ...prev, text: BULLET }));
+      textInputRef.current?.focus();
+      requestAnimationFrame(() => textarea?.setSelectionRange(BULLET.length, BULLET.length));
+      return;
+    }
+    const indices = getSelectedLineIndices(lines, start, end);
+    if (indices.length === 0) return;
+    const allHaveBullet = indices.every((i) => hasBullet(lines[i]));
+    const newLines = [...lines];
+    let addBeforeStart = 0,
+      addBeforeEnd = 0,
+      removeBeforeStart = 0,
+      removeBeforeEnd = 0;
+    for (const i of indices) {
+      const lineStart = lines.slice(0, i).join('\n').length;
+      if (allHaveBullet) {
+        const before = newLines[i];
+        newLines[i] = stripBullet(newLines[i]);
+        const removed = before.length - newLines[i].length;
+        if (lineStart < start) removeBeforeStart += removed;
+        if (lineStart < end) removeBeforeEnd += removed;
+      } else if (!hasBullet(newLines[i])) {
+        newLines[i] = BULLET + newLines[i];
+        if (lineStart <= start) addBeforeStart += BULLET.length;
+        if (lineStart <= end) addBeforeEnd += BULLET.length;
+      }
+    }
+    const newText = newLines.join('\n');
+    const newStart = allHaveBullet ? Math.max(0, start - removeBeforeStart) : start + addBeforeStart;
+    const newEnd = allHaveBullet ? Math.max(0, end - removeBeforeEnd) : end + addBeforeEnd;
+    setTextEdit((prev) => ({ ...prev, text: newText }));
+    textInputRef.current?.focus();
+    requestAnimationFrame(() => {
+      if (textarea)
+        textarea.setSelectionRange(
+          Math.min(newStart, newText.length),
+          Math.min(Math.max(newStart, newEnd), newText.length)
+        );
+    });
   };
 
   return (
@@ -157,6 +207,24 @@ export default function TextToolbar({
         </button>
       </div>
 
+      {/* Bullet list - always visible */}
+      <div className={styles.textToolbarGroup}>
+        <button
+          type="button"
+          className={styles.textToolbarBtn}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            closeOtherMenus();
+            toggleBulletList();
+          }}
+          title="Bullet list"
+        >
+          <span aria-hidden style={{ fontSize: '1.1em', lineHeight: 1 }}>
+            •
+          </span>
+        </button>
+      </div>
+
       {/* Text Style (Bold, Italic, etc.) */}
       <div className={styles.textToolbarGroup}>
         <button
@@ -211,6 +279,17 @@ export default function TextToolbar({
               }}
             >
               <s>S</s> Strikethrough
+            </button>
+            <button
+              className={styles.textToolbarMenuItem}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                toggleBulletList();
+                setShowStyleMenu(false);
+              }}
+              title="Bullet list"
+            >
+              • Bullet list
             </button>
           </div>
         )}

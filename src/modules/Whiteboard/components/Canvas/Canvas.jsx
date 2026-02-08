@@ -45,7 +45,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
   const { strokesRef, redoRef, undo, redo, clearRedoStack } = useStrokeManager();
   const textEditor = useTextEditor({ tool, onToolChange, strokesRef, clearRedoStack });
 
-  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
+  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef, textEditor.textInputRef);
   useWheelZoom(canvasRef, viewRef);
   const { isDragOver } = useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
 
