@@ -395,6 +395,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
       />
       {isDragOver && (
         <div className={styles.dropOverlay} aria-hidden>
+          <div className={styles.dropBackdrop} />
           <div className={styles.dropCircle}>
             <Icon name="down" className={styles.dropArrow} size="lg" />
             <span className={styles.dropText}>Drop</span>
