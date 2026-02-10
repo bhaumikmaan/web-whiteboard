@@ -13,6 +13,7 @@ import {
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { drawTextStroke, getTextAt } from '../../utils/textHelpers';
+import { Icon } from '@/components/Icons/index.js';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
 import TextEditor from '../TextEditor';
 
@@ -395,7 +396,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
       {isDragOver && (
         <div className={styles.dropOverlay} aria-hidden>
           <div className={styles.dropCircle}>
-            <span className={styles.dropArrow}>↓</span>
+            <Icon name="down" className={styles.dropArrow} size="lg" />
             <span className={styles.dropText}>Drop</span>
           </div>
         </div>

@@ -55,10 +55,9 @@ describe('AppShell', () => {
       </AppShell>
     );
 
-    // ThemeToggle renders a button with sun/moon
-    const themeButtons = screen.getAllByRole('button');
-    const themeToggle = themeButtons.find((btn) => btn.textContent.includes('☀') || btn.textContent.includes('🌙'));
-    expect(themeToggle).toBeDefined();
+    // ThemeToggle and HelpPanel chip both have "Toggle color scheme"; at least one exists
+    const themeButtons = screen.getAllByRole('button', { name: /toggle color scheme/i });
+    expect(themeButtons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders FooterBadge', () => {

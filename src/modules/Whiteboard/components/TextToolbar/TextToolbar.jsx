@@ -1,4 +1,5 @@
 import styles from './TextToolbar.module.css';
+import { Icon } from '@/components/Icons/index.js';
 import {
   TEXT_ALIGNMENTS,
   FONT_FAMILIES,
@@ -167,7 +168,7 @@ export default function TextToolbar({
           }}
           title="Text style"
         >
-          B
+          <Icon name="format" />
         </button>
         {showStyleMenu && (
           <div className={styles.textToolbarMenu}>
@@ -226,7 +227,7 @@ export default function TextToolbar({
           }}
           title="Text alignment"
         >
-          {TEXT_ALIGNMENTS.find((a) => a.value === textEdit.align)?.icon || '⬅'}
+          <Icon name={TEXT_ALIGNMENTS.find((a) => a.value === textEdit.align)?.icon || 'alignLeft'} />
         </button>
         {showAlignMenu && (
           <div className={styles.textToolbarMenu}>
@@ -241,7 +242,7 @@ export default function TextToolbar({
                   textInputRef.current?.focus();
                 }}
               >
-                {align.icon} {align.label}
+                <Icon name={align.icon} /> {align.label}
               </button>
             ))}
           </div>
@@ -344,7 +345,7 @@ export default function TextToolbar({
           title="Highlight color"
           style={{ background: textEdit.highlightColor ? textEdit.highlightColor : 'transparent' }}
         >
-          🖍
+          <Icon name="highlight" />
         </button>
         {showHighlightMenu && (
           <div className={styles.textToolbarMenu}>

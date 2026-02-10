@@ -14,7 +14,7 @@ describe('HelpPanel', () => {
 
     const toggle = screen.getByRole('button', { name: /open help/i });
     expect(toggle).toBeInTheDocument();
-    expect(toggle).toHaveTextContent('?');
+    expect(toggle.querySelector('[role="img"]')).toBeInTheDocument();
   });
 
   it('panel is closed by default', () => {
