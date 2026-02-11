@@ -13,6 +13,7 @@ import {
 } from '../../hooks';
 import { drawGrid, getThemeColors } from '../../utils/canvas';
 import { drawTextStroke, getTextAt } from '../../utils/textHelpers';
+import { Icon } from '@/components/Icons/index.js';
 import { TOOL_KINDS, DEFAULT_TOOL, getStrokeSize, getToolAlpha } from '../../constants/tools';
 import { PerformanceMonitor } from '../../../../utils/performance';
 import TextEditor from '../TextEditor';
@@ -61,7 +62,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
 
   useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
   useWheelZoom(canvasRef, viewRef);
-  useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
+  const { isDragOver } = useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
 
   const { handleTouchStart, handleTouchMove, handleTouchEnd } = usePinchZoom(canvasRef, viewRef, stateRef);
 
@@ -390,16 +391,25 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
     stateRef.current.pinch = null;
   };
 
-  // Expose undo/redo and performance metrics to parent
+  const captureView = React.useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png');
+    });
+  }, []);
+
+  // Expose undo/redo, captureView, and performance metrics to parent
   useImperativeHandle(
     ref,
     () => ({
       undo,
       redo,
+      captureView,
       getPerfMetrics: () => perfMonitorRef.current?.getMetrics() || null,
       getStrokeCount: () => strokesRef.current.length,
     }),
-    [undo, redo]
+    [undo, redo, captureView]
   );
 
   return (
@@ -411,7 +421,16 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
+        onContextMenu={(e) => e.preventDefault()}
       />
+      {isDragOver && (
+        <div className={styles.dropOverlay} aria-hidden>
+          <div className={styles.dropCircle}>
+            <Icon name="down" className={styles.dropArrow} size="lg" />
+            <span className={styles.dropText}>Drop</span>
+          </div>
+        </div>
+      )}
       <TextEditor
         textEdit={textEditor.textEdit}
         setTextEdit={textEditor.setTextEdit}

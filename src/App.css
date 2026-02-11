@@ -5,3 +5,12 @@
   background: var(--bg);
   color: var(--text);
 }
+
+.modulePane {
+  width: 100%;
+  height: 100%;
+}
+
+.modulePane[hidden] {
+  display: none;
+}

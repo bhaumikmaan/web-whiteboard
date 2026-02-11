@@ -14,10 +14,10 @@ export const TOOL_KINDS = {
 export const DRAWING_TOOLS = [TOOL_KINDS.PEN, TOOL_KINDS.MARKER, TOOL_KINDS.HIGHLIGHTER, TOOL_KINDS.ERASER];
 
 export const TOOL_OPTIONS = [
-  { key: TOOL_KINDS.PEN, label: 'Pen', icon: '🖊' },
-  { key: TOOL_KINDS.MARKER, label: 'Marker', icon: '🖍' },
-  { key: TOOL_KINDS.HIGHLIGHTER, label: 'Highlighter', icon: '🖌' },
-  { key: TOOL_KINDS.ERASER, label: 'Eraser', icon: '⌫' },
+  { key: TOOL_KINDS.PEN, label: 'Pen', icon: 'penTool' },
+  { key: TOOL_KINDS.MARKER, label: 'Marker', icon: 'marker' },
+  { key: TOOL_KINDS.HIGHLIGHTER, label: 'Highlighter', icon: 'highlighter' },
+  { key: TOOL_KINDS.ERASER, label: 'Eraser', icon: 'eraser' },
 ];
 
 /**
@@ -58,15 +58,15 @@ export const TEXT_SIZE_STEP = 4;
 /**
  * Common text sizes for dropdown
  */
-export const COMMON_TEXT_SIZES = [8, 12, 18, 24, 36, 48, 64, 80, 144, 288];
+export const COMMON_TEXT_SIZES = [12, 18, 24, 36, 48, 64, 80, 144, 288];
 
 /**
  * Text alignment options
  */
 export const TEXT_ALIGNMENTS = [
-  { value: 'left', label: 'Left', icon: '⬅' },
-  { value: 'center', label: 'Center', icon: '↔' },
-  { value: 'right', label: 'Right', icon: '➡' },
+  { value: 'left', label: 'Left', icon: 'alignLeft' },
+  { value: 'center', label: 'Center', icon: 'alignCenter' },
+  { value: 'right', label: 'Right', icon: 'alignRight' },
 ];
 
 /**

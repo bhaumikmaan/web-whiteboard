@@ -11,7 +11,7 @@ describe('Whiteboard moduleConfig', () => {
   });
 
   it('has icon property', () => {
-    expect(moduleConfig.icon).toBe('✏️');
+    expect(moduleConfig.icon).toBe('pen');
   });
 
   it('has helpItems array', () => {

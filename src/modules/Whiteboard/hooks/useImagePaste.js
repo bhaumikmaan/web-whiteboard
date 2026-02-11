@@ -8,6 +8,8 @@ import React from 'react';
  * @param {React.RefObject<Array>} redoRef
  */
 export default function useImagePaste(canvasRef, viewRef, strokesRef, redoRef) {
+  const [isDragOver, setIsDragOver] = React.useState(false);
+
   const pasteImageBlob = React.useCallback(
     (blob) => {
       const img = new Image();
@@ -57,10 +59,22 @@ export default function useImagePaste(canvasRef, viewRef, strokesRef, redoRef) {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    const onDragEnter = (e) => {
+      e.preventDefault();
+      setIsDragOver(true);
+    };
+
     const onDragOver = (e) => e.preventDefault();
+
+    const onDragLeave = (e) => {
+      if (!canvas.contains(e.relatedTarget)) {
+        setIsDragOver(false);
+      }
+    };
 
     const onDrop = (e) => {
       e.preventDefault();
+      setIsDragOver(false);
       const files = e.dataTransfer?.files || [];
       for (const file of files) {
         if (file.type.startsWith('image/')) {
@@ -70,11 +84,15 @@ export default function useImagePaste(canvasRef, viewRef, strokesRef, redoRef) {
       }
     };
 
+    canvas.addEventListener('dragenter', onDragEnter);
     canvas.addEventListener('dragover', onDragOver);
+    canvas.addEventListener('dragleave', onDragLeave);
     canvas.addEventListener('drop', onDrop);
 
     return () => {
+      canvas.removeEventListener('dragenter', onDragEnter);
       canvas.removeEventListener('dragover', onDragOver);
+      canvas.removeEventListener('dragleave', onDragLeave);
       canvas.removeEventListener('drop', onDrop);
     };
   }, [canvasRef, pasteImageBlob]);
@@ -118,4 +136,6 @@ export default function useImagePaste(canvasRef, viewRef, strokesRef, redoRef) {
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
   }, [pasteImageBlob]);
+
+  return { isDragOver };
 }
