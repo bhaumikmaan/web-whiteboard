@@ -1,5 +1,6 @@
 import React from 'react';
 import { TOOL_KINDS } from '../constants/tools';
+import { BULLET, hasBullet, getLineAtPosition } from '../utils/textHelpers';
 
 /**
  * Custom hook for managing text editing state and operations
@@ -94,17 +95,51 @@ export default function useTextEditor({ tool, onToolChange, strokesRef, clearRed
     textEditingRef.current = true;
   }, []);
 
-  // Handle text input key events
+  const setTextAndCursor = React.useCallback((newText, newCursor) => {
+    setTextEdit((prev) => ({ ...prev, text: newText }));
+    requestAnimationFrame(() => {
+      if (textInputRef.current) {
+        textInputRef.current.setSelectionRange(newCursor, newCursor);
+        textInputRef.current.focus();
+      }
+    });
+  }, []);
+
   const handleTextKeyDown = React.useCallback(
     (e) => {
       if (e.key === 'Escape') {
         closeTextEditor();
-      } else if (e.key === 'Enter' && !e.shiftKey) {
+        return;
+      }
+      const textarea = textInputRef.current;
+      const text = textEdit?.text ?? '';
+      const start = textarea?.selectionStart ?? 0;
+      const end = textarea?.selectionEnd ?? start;
+
+      if (e.key === ' ') {
+        if (start !== end) return;
+        const { lineStartIdx } = getLineAtPosition(text, start);
+        const before = text.slice(lineStartIdx, start);
+        if (before === '*' || before === '-') {
+          e.preventDefault();
+          setTextAndCursor(text.slice(0, lineStartIdx) + BULLET + text.slice(start), lineStartIdx + BULLET.length);
+        }
+        return;
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const { line } = getLineAtPosition(text, start);
+        if (hasBullet(line) && textarea) {
+          e.preventDefault();
+          const inserted = '\n' + BULLET;
+          setTextAndCursor(text.slice(0, start) + inserted + text.slice(end), start + inserted.length);
+          return;
+        }
         e.preventDefault();
         closeTextEditor();
       }
     },
-    [closeTextEditor]
+    [closeTextEditor, textEdit?.text, setTextAndCursor]
   );
 
   // Custom color picker handlers

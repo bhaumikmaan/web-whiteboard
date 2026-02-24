@@ -60,7 +60,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
   const { strokesRef, redoRef, undo, redo, clearRedoStack } = useStrokeManager();
   const textEditor = useTextEditor({ tool, onToolChange, strokesRef, clearRedoStack });
 
-  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef);
+  useKeyboardShortcuts(canvasRef, stateRef, strokesRef, redoRef, textEditor.textInputRef);
   useWheelZoom(canvasRef, viewRef);
   const { isDragOver } = useImagePaste(canvasRef, viewRef, strokesRef, redoRef);
 
@@ -425,6 +425,7 @@ const Canvas = forwardRef(({ theme, tool, onToolChange }, ref) => {
       />
       {isDragOver && (
         <div className={styles.dropOverlay} aria-hidden>
+          <div className={styles.dropBackdrop} />
           <div className={styles.dropCircle}>
             <Icon name="down" className={styles.dropArrow} size="lg" />
             <span className={styles.dropText}>Drop</span>

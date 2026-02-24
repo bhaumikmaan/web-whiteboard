@@ -2,6 +2,51 @@
  * Text stroke rendering and hit detection utilities
  */
 
+export const BULLET = '• ';
+
+export function hasBullet(line) {
+  return /^(•\s?|- )/.test(line);
+}
+
+export function stripBullet(line) {
+  return line.replace(/^(•\s?|- )/, '');
+}
+
+/** Get line and its start index in text at position pos */
+export function getLineAtPosition(text, pos) {
+  const lines = text.split('\n');
+  let idx = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const lineEnd = idx + lines[i].length;
+    if (pos >= idx && pos <= lineEnd) return { line: lines[i], lineStartIdx: idx };
+    idx = lineEnd + 1;
+  }
+  return { line: '', lineStartIdx: text.length };
+}
+
+/** Get line indices that overlap [start, end] (or line at cursor if no selection) */
+export function getSelectedLineIndices(lines, start, end) {
+  let charIndex = 0;
+  const indices = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lineEnd = charIndex + lines[i].length;
+    if (end > charIndex && start <= lineEnd) indices.push(i);
+    charIndex = lineEnd + 1;
+  }
+  if (indices.length === 0 && lines.length > 0) {
+    let idx = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (start <= idx + lines[i].length) {
+        indices.push(i);
+        break;
+      }
+      idx += lines[i].length + 1;
+    }
+    if (indices.length === 0) indices.push(lines.length - 1);
+  }
+  return indices;
+}
+
 /**
  * Draw a text stroke on the canvas
  * @param {CanvasRenderingContext2D} ctx - Canvas context
